@@ -1,0 +1,248 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #f5f5f7;
+  color: #1a1a1a;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+input,
+select,
+button {
+  font-size: 0.95rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+button {
+  cursor: pointer;
+  background: white;
+}
+
+.primary-btn {
+  background: #1a1a1a;
+  color: white;
+  border: none;
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.field-row-label {
+  min-width: 100px;
+  font-weight: 600;
+}
+
+.error-text {
+  color: #c0392b;
+}
+
+.editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.editor-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.editor-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-top: 16px;
+}
+
+@media (min-width: 760px) {
+  .editor-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.editor-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-view {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-view-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.card-view-headline {
+  color: #666;
+  margin-top: 2px;
+}
+
+.card-view-fields {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-view-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.card-view-field-label {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.card-view-field-value {
+  font-weight: 500;
+}
+
+.card-view-visibility-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eee;
+  color: #555;
+}
+
+.badge-public {
+  background: #e3f7e9;
+  color: #1e8a4c;
+}
+
+.badge-link_only {
+  background: #eaf1ff;
+  color: #2a5fd9;
+}
+
+.badge-request_required {
+  background: #fff6e0;
+  color: #a87900;
+}
+
+.badge-hidden {
+  background: #f0f0f0;
+  color: #888;
+}
+
+.card-view-request-btn {
+  font-size: 0.8rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.share-link-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.share-link-row input {
+  flex: 1;
+}
+
+.modal-close {
+  align-self: stretch;
+}
+
+.request-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.request-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.status-approved {
+  background: #e3f7e9;
+  color: #1e8a4c;
+}
+
+.status-denied {
+  background: #fde7e7;
+  color: #c0392b;
+}
