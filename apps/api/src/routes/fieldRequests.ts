@@ -2,6 +2,13 @@ import type { FastifyInstance } from "fastify";
 import { query } from "../db.js";
 import { requireCardOwner, requireFieldRequestOwner } from "../auth.js";
 import type { CardFieldRow, FieldRequestRow, ShareSessionRow } from "../types.js";
+import {
+  cardIdParamsSchema,
+  createFieldRequestBodySchema,
+  fieldRequestIdParamsSchema,
+  respondBodySchema,
+  sessionIdParamsSchema,
+} from "../schemas.js";
 
 interface CreateFieldRequestBody {
   fieldId: string;
@@ -24,6 +31,7 @@ function serializeFieldRequest(row: FieldRequestRow) {
 export default async function fieldRequestsRoutes(app: FastifyInstance) {
   app.post<{ Params: { sessionId: string }; Body: CreateFieldRequestBody }>(
     "/api/share-sessions/:sessionId/field-requests",
+    { schema: { params: sessionIdParamsSchema, body: createFieldRequestBodySchema } },
     async (request, reply) => {
       const { sessionId } = request.params;
       const { fieldId } = request.body;
@@ -72,6 +80,7 @@ export default async function fieldRequestsRoutes(app: FastifyInstance) {
 
   app.get<{ Params: { cardId: string } }>(
     "/api/cards/:cardId/field-requests",
+    { schema: { params: cardIdParamsSchema } },
     async (request, reply) => {
       const owner = await requireCardOwner(request, reply, request.params.cardId);
       if (!owner) return;
@@ -98,6 +107,7 @@ export default async function fieldRequestsRoutes(app: FastifyInstance) {
 
   app.post<{ Params: { id: string }; Body: RespondBody }>(
     "/api/field-requests/:id/respond",
+    { schema: { params: fieldRequestIdParamsSchema, body: respondBodySchema } },
     async (request, reply) => {
       const owner = await requireFieldRequestOwner(request, reply, request.params.id);
       if (!owner) return;

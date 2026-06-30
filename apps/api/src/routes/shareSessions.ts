@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { query } from "../db.js";
 import { requireCardOwner } from "../auth.js";
 import type { CardFieldRow, PersonRow, ShareSessionRow } from "../types.js";
+import { cardIdParamsSchema, createShareSessionBodySchema, sessionIdParamsSchema } from "../schemas.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -17,6 +18,7 @@ function buildShareUrl(sessionId: string) {
 export default async function shareSessionsRoutes(app: FastifyInstance) {
   app.post<{ Params: { cardId: string }; Body: CreateShareSessionBody }>(
     "/api/cards/:cardId/share-sessions",
+    { schema: { params: cardIdParamsSchema, body: createShareSessionBodySchema } },
     async (request, reply) => {
       const owner = await requireCardOwner(request, reply, request.params.cardId);
       if (!owner) return;
@@ -48,6 +50,7 @@ export default async function shareSessionsRoutes(app: FastifyInstance) {
 
   app.get<{ Params: { sessionId: string } }>(
     "/api/share-sessions/:sessionId",
+    { schema: { params: sessionIdParamsSchema } },
     async (request, reply) => {
       const sessionResult = await query<ShareSessionRow>(
         "select * from share_session where id = $1",

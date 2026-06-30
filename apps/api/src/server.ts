@@ -1,15 +1,6 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
-import cardsRoutes from "./routes/cards.js";
-import shareSessionsRoutes from "./routes/shareSessions.js";
-import fieldRequestsRoutes from "./routes/fieldRequests.js";
+import { buildApp } from "./app.js";
 
-const app = Fastify({ logger: true });
-
-await app.register(cors, { origin: true });
-await app.register(cardsRoutes);
-await app.register(shareSessionsRoutes);
-await app.register(fieldRequestsRoutes);
+const app = await buildApp();
 
 const port = Number(process.env.PORT ?? 4000);
 

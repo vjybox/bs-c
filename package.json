@@ -6,9 +6,11 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,green \"npm run dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\""
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\"",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "@playwright/test": "^1.49.1"
   }
 }
