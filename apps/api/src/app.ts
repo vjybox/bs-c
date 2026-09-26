@@ -3,6 +3,8 @@ import cors from "@fastify/cors";
 import cardsRoutes from "./routes/cards.js";
 import shareSessionsRoutes from "./routes/shareSessions.js";
 import fieldRequestsRoutes from "./routes/fieldRequests.js";
+import contactsRoutes from "./routes/contacts.js";
+import connectionsRoutes from "./routes/connections.js";
 
 export async function buildApp() {
   const app = Fastify({ logger: true });
@@ -21,6 +23,8 @@ export async function buildApp() {
   await app.register(cardsRoutes);
   await app.register(shareSessionsRoutes);
   await app.register(fieldRequestsRoutes);
+  await app.register(contactsRoutes);
+  await app.register(connectionsRoutes);
 
   return app;
 }

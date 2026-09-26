@@ -61,3 +61,48 @@ create index if not exists idx_digital_card_person on digital_card(person_id);
 create index if not exists idx_card_field_card on card_field(card_id);
 create index if not exists idx_share_session_card on share_session(card_id);
 create index if not exists idx_field_request_session on field_request(share_session_id);
+
+-- Contacts & Networking Graph module tables.
+
+create table if not exists contact (
+  id uuid primary key default gen_random_uuid(),
+  owner_person_id uuid not null references person(id) on delete cascade,
+  subject_person_id uuid references person(id) on delete set null,
+  unmatched_profile jsonb,
+  capture_source text not null check (capture_source in ('card_share', 'manual')),
+  capture_context text,
+  created_at timestamptz not null default now()
+);
+
+-- One Contact per (owner, subject) pair.
+create unique index if not exists uq_contact_owner_subject
+  on contact(owner_person_id, subject_person_id)
+  where subject_person_id is not null;
+
+create table if not exists connection (
+  id uuid primary key default gen_random_uuid(),
+  person_a_id uuid not null references person(id) on delete cascade,
+  person_b_id uuid not null references person(id) on delete cascade,
+  strength float not null default 0.1,
+  last_interaction_at timestamptz,
+  context text,
+  created_at timestamptz not null default now(),
+  -- person_a_id < person_b_id enforced in application code to prevent duplicate edges.
+  unique(person_a_id, person_b_id)
+);
+
+create table if not exists interaction (
+  id uuid primary key default gen_random_uuid(),
+  connection_id uuid not null references connection(id) on delete cascade,
+  logged_by_person_id uuid not null references person(id) on delete cascade,
+  channel text not null check (channel in ('meeting', 'call', 'email', 'message', 'note')),
+  summary text,
+  occurred_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_contact_owner on contact(owner_person_id);
+create index if not exists idx_connection_person_a on connection(person_a_id);
+create index if not exists idx_connection_person_b on connection(person_b_id);
+create index if not exists idx_connection_last_interaction on connection(last_interaction_at);
+create index if not exists idx_interaction_connection on interaction(connection_id);

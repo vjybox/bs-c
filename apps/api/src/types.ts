@@ -49,3 +49,36 @@ export interface FieldRequestRow {
   created_at: string;
   resolved_at: string | null;
 }
+
+export type CaptureSource = "card_share" | "manual";
+export type InteractionChannel = "meeting" | "call" | "email" | "message" | "note";
+
+export interface ContactRow {
+  id: string;
+  owner_person_id: string;
+  subject_person_id: string | null;
+  unmatched_profile: Record<string, unknown> | null;
+  capture_source: CaptureSource;
+  capture_context: string | null;
+  created_at: string;
+}
+
+export interface ConnectionRow {
+  id: string;
+  person_a_id: string;
+  person_b_id: string;
+  strength: number;
+  last_interaction_at: string | null;
+  context: string | null;
+  created_at: string;
+}
+
+export interface InteractionRow {
+  id: string;
+  connection_id: string;
+  logged_by_person_id: string;
+  channel: InteractionChannel;
+  summary: string | null;
+  occurred_at: string;
+  created_at: string;
+}

@@ -54,3 +54,35 @@ export interface FieldRequest {
   fieldLabel: string;
   shareSessionId: string;
 }
+
+export type InteractionChannel = "meeting" | "call" | "email" | "message" | "note";
+
+export interface Interaction {
+  id: string;
+  channel: InteractionChannel;
+  summary: string | null;
+  occurredAt: string;
+  loggedByPersonId: string;
+}
+
+export interface Contact {
+  id: string;
+  subject: { displayName: string; headline: string | null } | null;
+  captureSource: "card_share" | "manual";
+  captureContext: string | null;
+  connectionId: string | null;
+  connectionStrength: number | null;
+  lastInteractionAt: string | null;
+  createdAt: string;
+}
+
+export interface ContactDetail extends Contact {
+  interactions: Interaction[];
+}
+
+export interface ReconnectionSuggestion {
+  contactId: string;
+  subject: { displayName: string; headline: string | null };
+  daysSinceInteraction: number | null;
+  connectionStrength: number;
+}

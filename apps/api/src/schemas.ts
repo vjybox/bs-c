@@ -90,3 +90,37 @@ export const respondBodySchema = {
   additionalProperties: false,
   properties: { approve: { type: "boolean" } },
 };
+
+export const contactIdParamsSchema = {
+  type: "object",
+  required: ["contactId"],
+  properties: { contactId: uuidSchema },
+};
+
+export const createContactBodySchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    shareSessionId: uuidSchema,
+    subjectPersonId: uuidSchema,
+    captureSource: { type: "string", enum: ["card_share", "manual"] },
+    captureContext: { type: "string", maxLength: 500 },
+  },
+};
+
+export const logInteractionBodySchema = {
+  type: "object",
+  required: ["channel"],
+  additionalProperties: false,
+  properties: {
+    channel: { type: "string", enum: ["meeting", "call", "email", "message", "note"] },
+    summary: { type: "string", maxLength: 2000 },
+    occurredAt: { type: "string", format: "date-time" },
+  },
+};
+
+export const connectionIdParamsSchema = {
+  type: "object",
+  required: ["connectionId"],
+  properties: { connectionId: uuidSchema },
+};

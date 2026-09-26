@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getShareSession, requestField } from "../api";
+import { getShareSession, getStoredAuth, requestField, saveContact } from "../api";
 import CardView from "../components/CardView";
 import type { RecipientCardView } from "../types";
 
@@ -11,6 +11,9 @@ export default function RecipientView() {
   const [view, setView] = useState<RecipientCardView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const auth = getStoredAuth();
 
   useEffect(() => {
     if (!sessionId) return;
@@ -43,6 +46,19 @@ export default function RecipientView() {
       await requestField(sessionId, fieldId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to request field");
+    }
+  }
+
+  async function handleSaveContact() {
+    if (!sessionId || !auth) return;
+    setSaveState("saving");
+    setSaveError(null);
+    try {
+      await saveContact(sessionId, auth.editToken);
+      setSaveState("saved");
+    } catch (err) {
+      setSaveState("error");
+      setSaveError(err instanceof Error ? err.message : "Failed to save contact");
     }
   }
 
@@ -80,6 +96,23 @@ export default function RecipientView() {
         fields={fields}
         onRequestField={handleRequest}
       />
+      {auth && (
+        <div style={{ marginTop: "1rem" }}>
+          {saveState === "saved" ? (
+            <p>Contact saved ✓</p>
+          ) : (
+            <button
+              onClick={handleSaveContact}
+              disabled={saveState === "saving"}
+            >
+              {saveState === "saving" ? "Saving…" : "Save Contact"}
+            </button>
+          )}
+          {saveState === "error" && saveError && (
+            <p className="error-text">{saveError}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

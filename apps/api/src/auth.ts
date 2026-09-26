@@ -2,11 +2,24 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { query } from "./db.js";
 import type { DigitalCardRow, FieldRequestRow, PersonRow, ShareSessionRow } from "./types.js";
 
-/**
- * editToken stands in for real Account/OAuth auth in this slice (see plan's
- * "What's Explicitly Out of Scope"). It authorizes all edits to the Person
- * that owns it, including all of that Person's cards.
- */
+export async function requirePersonByToken(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<PersonRow | null> {
+  const token = request.headers["x-edit-token"];
+  if (typeof token !== "string" || token.length === 0) {
+    reply.code(401).send({ error: "Missing x-edit-token header" });
+    return null;
+  }
+  const result = await query<PersonRow>("select * from person where edit_token = $1", [token]);
+  const person = result.rows[0];
+  if (!person) {
+    reply.code(403).send({ error: "Unknown edit token" });
+    return null;
+  }
+  return person;
+}
+
 export async function requireCardOwner(
   request: FastifyRequest,
   reply: FastifyReply,

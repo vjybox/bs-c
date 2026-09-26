@@ -1,11 +1,15 @@
 import type {
+  Contact,
+  ContactDetail,
   FieldRequest,
   FieldType,
   FieldVisibility,
+  InteractionChannel,
   OwnerCard,
   OwnerField,
   OwnerPerson,
   RecipientCardView,
+  ReconnectionSuggestion,
 } from "./types";
 
 const STORAGE_CARD_ID = "digitalIdentity.cardId";
@@ -145,6 +149,55 @@ export async function respondFieldRequest(
     method: "POST",
     headers: { "Content-Type": "application/json", "x-edit-token": editToken },
     body: JSON.stringify({ approve }),
+  });
+  return handle(res);
+}
+
+export async function saveContact(
+  shareSessionId: string,
+  editToken: string,
+  captureContext?: string,
+): Promise<{ id: string; connectionId: string }> {
+  const res = await fetch("/api/contacts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-edit-token": editToken },
+    body: JSON.stringify({ shareSessionId, captureSource: "card_share", captureContext }),
+  });
+  return handle(res);
+}
+
+export async function listContacts(editToken: string): Promise<Contact[]> {
+  const res = await fetch("/api/contacts", { headers: { "x-edit-token": editToken } });
+  return handle(res);
+}
+
+export async function getContact(contactId: string, editToken: string): Promise<ContactDetail> {
+  const res = await fetch(`/api/contacts/${contactId}`, {
+    headers: { "x-edit-token": editToken },
+  });
+  return handle(res);
+}
+
+export async function logInteraction(
+  connectionId: string,
+  editToken: string,
+  channel: InteractionChannel,
+  summary?: string,
+  occurredAt?: string,
+): Promise<{ id: string; channel: string; summary: string | null; occurredAt: string }> {
+  const res = await fetch(`/api/connections/${connectionId}/interactions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-edit-token": editToken },
+    body: JSON.stringify({ channel, summary, occurredAt }),
+  });
+  return handle(res);
+}
+
+export async function getReconnectionSuggestions(
+  editToken: string,
+): Promise<ReconnectionSuggestion[]> {
+  const res = await fetch("/api/contacts/reconnection-suggestions", {
+    headers: { "x-edit-token": editToken },
   });
   return handle(res);
 }
