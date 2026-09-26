@@ -31,9 +31,19 @@ export default function ContactDetailPage() {
       navigate("/");
       return;
     }
+    let ignore = false;
+    setContact(null);
+    setError(null);
     getContact(contactId, auth.editToken)
-      .then(setContact)
-      .catch((err: Error) => setError(err.message));
+      .then((data) => {
+        if (!ignore) setContact(data);
+      })
+      .catch((err: Error) => {
+        if (!ignore) setError(err.message);
+      });
+    return () => {
+      ignore = true;
+    };
   }, [contactId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleLogInteraction(e: React.FormEvent) {
@@ -53,7 +63,7 @@ export default function ContactDetailPage() {
         channel: newInteraction.channel as InteractionChannel,
         summary: newInteraction.summary,
         occurredAt: newInteraction.occurredAt,
-        loggedByPersonId: auth.cardId,
+        loggedByPersonId: newInteraction.loggedByPersonId,
       };
       setContact((prev) =>
         prev ? { ...prev, interactions: [synthetic, ...prev.interactions] } : prev,
@@ -67,7 +77,14 @@ export default function ContactDetailPage() {
   }
 
   if (!auth) return null;
-  if (error) return <div className="page"><p className="error-text">{error}</p></div>;
+  if (error) {
+    return (
+      <div className="page">
+        <Link to="/contacts">← My Contacts</Link>
+        <p className="error-text">{error}</p>
+      </div>
+    );
+  }
   if (!contact) return <div className="page"><p>Loading…</p></div>;
 
   return (

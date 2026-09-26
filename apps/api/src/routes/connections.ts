@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { query } from "../db.js";
+import { pool, query, recomputeConnectionStrength } from "../db.js";
 import { requirePersonByToken } from "../auth.js";
 import type { ConnectionRow, InteractionRow } from "../types.js";
 import { connectionIdParamsSchema, logInteractionBodySchema } from "../schemas.js";
@@ -45,18 +45,7 @@ export default async function connectionsRoutes(app: FastifyInstance) {
       );
       const interaction = interactionRes.rows[0];
 
-      // Recompute strength synchronously (recent interaction count, capped at 1.0).
-      await query(
-        `UPDATE connection SET
-           last_interaction_at = now(),
-           strength = LEAST(1.0, 0.1 + (
-             SELECT count(*) FROM interaction
-             WHERE connection_id = $1
-               AND occurred_at > now() - interval '90 days'
-           ) * 0.15)
-         WHERE id = $1`,
-        [connectionId],
-      );
+      await recomputeConnectionStrength(pool, connectionId);
 
       return reply.code(201).send({
         id: interaction.id,

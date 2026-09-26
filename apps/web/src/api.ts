@@ -184,7 +184,13 @@ export async function logInteraction(
   channel: InteractionChannel,
   summary?: string,
   occurredAt?: string,
-): Promise<{ id: string; channel: string; summary: string | null; occurredAt: string }> {
+): Promise<{
+  id: string;
+  channel: string;
+  summary: string | null;
+  occurredAt: string;
+  loggedByPersonId: string;
+}> {
   const res = await fetch(`/api/connections/${connectionId}/interactions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-edit-token": editToken },

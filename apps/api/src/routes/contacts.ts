@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { pool, query } from "../db.js";
+import { pool, query, recomputeConnectionStrength } from "../db.js";
 import { requirePersonByToken } from "../auth.js";
 import type { ConnectionRow, ContactRow, InteractionRow, PersonRow } from "../types.js";
 import {
@@ -169,12 +169,13 @@ export default async function contactsRoutes(app: FastifyInstance) {
             ? [owner.id, subjectPersonId]
             : [subjectPersonId, owner.id];
 
+        // The DO UPDATE is a no-op write, used only to make Postgres RETURN the
+        // existing row when the edge already exists (ON CONFLICT DO NOTHING can't).
         const connRes = await client.query<ConnectionRow>(
-          `INSERT INTO connection (person_a_id, person_b_id, last_interaction_at)
-           VALUES ($1, $2, now())
+          `INSERT INTO connection (person_a_id, person_b_id)
+           VALUES ($1, $2)
            ON CONFLICT (person_a_id, person_b_id) DO UPDATE
-             SET last_interaction_at = now(),
-                 strength = LEAST(1.0, connection.strength + 0.05)
+             SET person_a_id = EXCLUDED.person_a_id
            RETURNING *`,
           [personAId, personBId],
         );
@@ -188,16 +189,23 @@ export default async function contactsRoutes(app: FastifyInstance) {
           [connection.id, owner.id, summary],
         );
 
+        // Recompute with the same formula used when logging interactions directly,
+        // so strength never drifts between the two code paths.
+        const { strength } = await recomputeConnectionStrength(client, connection.id);
+
         await client.query("COMMIT");
 
         return reply.code(201).send({
           id: contact.id,
           subjectPersonId: contact.subject_person_id,
           connectionId: connection.id,
-          strength: connection.strength,
+          strength,
         });
       } catch (err) {
         await client.query("ROLLBACK");
+        if ((err as { code?: string }).code === "23505") {
+          return reply.code(409).send({ error: "Contact already exists" });
+        }
         throw err;
       } finally {
         client.release();
