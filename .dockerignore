@@ -1,0 +1,34 @@
+# The build context is sent to the Docker daemon in full on every build. Without this,
+# that is ~204 MB (191 MB of it node_modules) for an image that runs its own `npm ci`
+# anyway. Excluding the waste brings it to roughly 1 MB, which matters a lot when the
+# daemon is on a NAS rather than a local SSD.
+
+node_modules
+**/node_modules
+
+.git
+.gitignore
+
+# Build outputs — regenerated inside the image.
+dist
+**/dist
+dist-embed
+*.tsbuildinfo
+
+# Design corpus and tests: not needed to build or run the app.
+docs
+e2e
+playwright-report
+test-results
+
+# Local environment and editor state.
+.env
+**/.env
+.env.*
+!.env.example
+.vscode
+.idea
+.DS_Store
+
+*.log
+npm-debug.log*

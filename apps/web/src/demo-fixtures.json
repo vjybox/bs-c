@@ -1,0 +1,905 @@
+{
+  "capturedAt": "2026-09-27T18:56:01.945Z",
+  "personas": [
+    {
+      "displayName": "Mara Oyelaran",
+      "headline": "Independent brand consultant",
+      "cardId": "41d21575-0e6a-4b94-9a0b-d7fce1edce78",
+      "editToken": "demo-mara-token"
+    },
+    {
+      "displayName": "Devon Park",
+      "headline": "Account Executive, Northwind Cloud",
+      "cardId": "b61c1efb-de41-49e5-a522-27120cedc2d3",
+      "editToken": "demo-devon-token"
+    },
+    {
+      "displayName": "Priya Raman",
+      "headline": "Head of IT Security, Meridian Health",
+      "cardId": "8d60557d-40c6-4afb-83c3-e03e9436c803",
+      "editToken": "demo-priya-token"
+    },
+    {
+      "displayName": "Yusuf Demir",
+      "headline": "Talent Partner, Lattice Search",
+      "cardId": "46025737-7adc-4b3d-877d-97cb57ea63e6",
+      "editToken": "demo-yusuf-token"
+    },
+    {
+      "displayName": "Lena Brandt",
+      "headline": "Founder & Creative Director, Studio Brandt",
+      "cardId": "6c5adacd-0896-4ac3-9194-b080b2d8bf61",
+      "editToken": "demo-lena-token"
+    }
+  ],
+  "byToken": {
+    "demo-mara-token": {
+      "ownerCard": {
+        "person": {
+          "id": "38d52dfc-e3bf-412f-9112-a373388ddbb2",
+          "displayName": "Mara Oyelaran",
+          "headline": "Independent brand consultant"
+        },
+        "card": {
+          "id": "41d21575-0e6a-4b94-9a0b-d7fce1edce78",
+          "label": "Default",
+          "isDefault": true,
+          "status": "active",
+          "fields": [
+            {
+              "id": "fc97e514-8dc4-4263-ae94-837136c22c75",
+              "fieldType": "email",
+              "label": "Work email",
+              "value": "mara@oyelaran.studio",
+              "visibility": "public",
+              "displayOrder": 0
+            },
+            {
+              "id": "64250ce1-e674-483d-b0cb-a25a9bdeb765",
+              "fieldType": "url",
+              "label": "Website",
+              "value": "https://oyelaran.studio",
+              "visibility": "public",
+              "displayOrder": 1
+            },
+            {
+              "id": "accf6d14-e245-43d9-bc3c-9b2689887d29",
+              "fieldType": "phone",
+              "label": "Mobile",
+              "value": "+44 7700 900101",
+              "visibility": "link_only",
+              "displayOrder": 2
+            },
+            {
+              "id": "8f6eb4d7-8ef7-4765-a507-aa2f4682ef50",
+              "fieldType": "email",
+              "label": "Personal email",
+              "value": "mara.p@fastmail.com",
+              "visibility": "request_required",
+              "displayOrder": 3
+            },
+            {
+              "id": "cecc2281-a6e2-4bdf-84b5-04dc9657c38d",
+              "fieldType": "text",
+              "label": "Home address",
+              "value": "12 Orchard Lane, Bristol",
+              "visibility": "hidden",
+              "displayOrder": 4
+            }
+          ]
+        }
+      },
+      "contacts": [
+        {
+          "id": "fe4f1ed1-89e7-4553-ae19-ee13a5897270",
+          "subject": {
+            "displayName": "Devon Park",
+            "headline": "Account Executive, Northwind Cloud"
+          },
+          "captureSource": "card_share",
+          "captureContext": "SaaStr Annual 2026 — hallway track",
+          "connectionId": "be9647bd-a05f-4aab-919d-6f788cd341ba",
+          "connectionStrength": 1,
+          "lastInteractionAt": "2026-09-25T18:55:37.539Z",
+          "createdAt": "2026-07-01T18:55:37.525Z"
+        },
+        {
+          "id": "6bce0599-37f1-4fd8-b12d-172ae7d10bab",
+          "subject": {
+            "displayName": "Priya Raman",
+            "headline": "Head of IT Security, Meridian Health"
+          },
+          "captureSource": "card_share",
+          "captureContext": "Meridian Health security review, introduced by Devon",
+          "connectionId": "9e686982-729e-41d4-b169-d60131f8980e",
+          "connectionStrength": 0.55,
+          "lastInteractionAt": "2026-09-22T18:55:37.557Z",
+          "createdAt": "2026-07-14T18:55:37.553Z"
+        },
+        {
+          "id": "c054aced-e11e-4987-bf04-62f8a8cd0f03",
+          "subject": {
+            "displayName": "Yusuf Demir",
+            "headline": "Talent Partner, Lattice Search"
+          },
+          "captureSource": "card_share",
+          "captureContext": "Intro call about contract design roles",
+          "connectionId": "bb276dbe-a455-4d20-b326-357fe227f765",
+          "connectionStrength": 0.25,
+          "lastInteractionAt": "2026-09-15T18:55:37.561Z",
+          "createdAt": "2026-09-15T18:55:37.559Z"
+        },
+        {
+          "id": "f41b233b-beca-4391-b162-d07fad4f528c",
+          "subject": {
+            "displayName": "Lena Brandt",
+            "headline": "Founder & Creative Director, Studio Brandt"
+          },
+          "captureSource": "card_share",
+          "captureContext": "Berlin design meetup, 2025",
+          "connectionId": "bb7a6a5d-4fef-47f2-8cda-96a33c4b6669",
+          "connectionStrength": 0.1,
+          "lastInteractionAt": "2026-03-01T18:55:37.567Z",
+          "createdAt": "2025-12-01T18:55:37.563Z"
+        }
+      ],
+      "contactDetails": {
+        "fe4f1ed1-89e7-4553-ae19-ee13a5897270": {
+          "id": "fe4f1ed1-89e7-4553-ae19-ee13a5897270",
+          "subject": {
+            "displayName": "Devon Park",
+            "headline": "Account Executive, Northwind Cloud"
+          },
+          "captureSource": "card_share",
+          "captureContext": "SaaStr Annual 2026 — hallway track",
+          "connectionId": "be9647bd-a05f-4aab-919d-6f788cd341ba",
+          "connectionStrength": 1,
+          "lastInteractionAt": "2026-09-25T18:55:37.539Z",
+          "createdAt": "2026-07-01T18:55:37.525Z",
+          "interactions": [
+            {
+              "id": "a56d19fb-260f-4f27-8cca-3e2b5e435549",
+              "channel": "meeting",
+              "summary": "Kickoff scheduled for next month",
+              "occurredAt": "2026-09-25T18:55:37.539Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "5371ce2d-2369-44a4-9d74-01cfcd156f5a",
+              "channel": "message",
+              "summary": "Quick Slack thread about timelines",
+              "occurredAt": "2026-09-10T18:55:37.538Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "aea7bb30-2fad-4ddd-9479-a4be154e9135",
+              "channel": "call",
+              "summary": "Walked through pricing tiers",
+              "occurredAt": "2026-08-30T18:55:37.537Z",
+              "loggedByPersonId": "bb00bcc6-6d41-4c2a-89a6-e582c95e145c"
+            },
+            {
+              "id": "7501e380-77b6-45cd-a3f1-003cdb8a7ea2",
+              "channel": "email",
+              "summary": "Sent over the positioning one-pager",
+              "occurredAt": "2026-08-13T18:55:37.536Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "dd7d2a69-da4d-460c-ad6b-62d025c7694b",
+              "channel": "meeting",
+              "summary": "Coffee at the conference, talked rebrand scope",
+              "occurredAt": "2026-07-23T18:55:37.536Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "65bd230d-9099-4efc-bcc9-697ddb297d60",
+              "channel": "note",
+              "summary": "Saved contact from shared card",
+              "occurredAt": "2026-07-01T18:55:37.533Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            }
+          ]
+        },
+        "6bce0599-37f1-4fd8-b12d-172ae7d10bab": {
+          "id": "6bce0599-37f1-4fd8-b12d-172ae7d10bab",
+          "subject": {
+            "displayName": "Priya Raman",
+            "headline": "Head of IT Security, Meridian Health"
+          },
+          "captureSource": "card_share",
+          "captureContext": "Meridian Health security review, introduced by Devon",
+          "connectionId": "9e686982-729e-41d4-b169-d60131f8980e",
+          "connectionStrength": 0.55,
+          "lastInteractionAt": "2026-09-22T18:55:37.557Z",
+          "createdAt": "2026-07-14T18:55:37.553Z",
+          "interactions": [
+            {
+              "id": "e6ba8a89-dd84-4976-9d70-ce8e267a8fa4",
+              "channel": "call",
+              "summary": "Clarified data residency questions",
+              "occurredAt": "2026-09-22T18:55:37.557Z",
+              "loggedByPersonId": "e4ba5b75-a433-449c-85d1-29074d0c4888"
+            },
+            {
+              "id": "02b15866-1af4-4712-9b32-8d46149f56fc",
+              "channel": "email",
+              "summary": "Sent the vendor security questionnaire back",
+              "occurredAt": "2026-08-28T18:55:37.556Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "c0ba1cd8-b434-4653-8cc0-6700b472ffa1",
+              "channel": "note",
+              "summary": "Saved contact from shared card",
+              "occurredAt": "2026-07-14T18:55:37.555Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            }
+          ]
+        },
+        "c054aced-e11e-4987-bf04-62f8a8cd0f03": {
+          "id": "c054aced-e11e-4987-bf04-62f8a8cd0f03",
+          "subject": {
+            "displayName": "Yusuf Demir",
+            "headline": "Talent Partner, Lattice Search"
+          },
+          "captureSource": "card_share",
+          "captureContext": "Intro call about contract design roles",
+          "connectionId": "bb276dbe-a455-4d20-b326-357fe227f765",
+          "connectionStrength": 0.25,
+          "lastInteractionAt": "2026-09-15T18:55:37.561Z",
+          "createdAt": "2026-09-15T18:55:37.559Z",
+          "interactions": [
+            {
+              "id": "b443b54d-8847-419b-9881-7834aade211e",
+              "channel": "note",
+              "summary": "Saved contact from shared card",
+              "occurredAt": "2026-09-15T18:55:37.561Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            }
+          ]
+        },
+        "f41b233b-beca-4391-b162-d07fad4f528c": {
+          "id": "f41b233b-beca-4391-b162-d07fad4f528c",
+          "subject": {
+            "displayName": "Lena Brandt",
+            "headline": "Founder & Creative Director, Studio Brandt"
+          },
+          "captureSource": "card_share",
+          "captureContext": "Berlin design meetup, 2025",
+          "connectionId": "bb7a6a5d-4fef-47f2-8cda-96a33c4b6669",
+          "connectionStrength": 0.1,
+          "lastInteractionAt": "2026-03-01T18:55:37.567Z",
+          "createdAt": "2025-12-01T18:55:37.563Z",
+          "interactions": [
+            {
+              "id": "479af3f5-c973-4798-b804-70ae09de6061",
+              "channel": "email",
+              "summary": "Swapped portfolio links, said we'd collaborate",
+              "occurredAt": "2026-03-01T18:55:37.567Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "f361f92e-f85f-49ad-87d7-2b4be415e53d",
+              "channel": "meeting",
+              "summary": "Drinks after the meetup talk",
+              "occurredAt": "2026-01-30T18:55:37.566Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "bf2f4b8b-6a4f-4d7b-994a-c8f78624340d",
+              "channel": "note",
+              "summary": "Saved contact from shared card",
+              "occurredAt": "2025-12-01T18:55:37.566Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            }
+          ]
+        }
+      },
+      "fieldRequests": [
+        {
+          "id": "1cc0358c-1ef7-4648-b6ef-7b8d553839a6",
+          "fieldId": "8f6eb4d7-8ef7-4765-a507-aa2f4682ef50",
+          "status": "pending",
+          "createdAt": "2026-09-26T18:55:37.521Z",
+          "resolvedAt": null,
+          "fieldLabel": "Personal email",
+          "shareSessionId": "f01ced29-f458-4531-9df8-6607c65bd5d0"
+        },
+        {
+          "id": "89c5f00b-4601-4d1a-832b-b3fd07b04429",
+          "fieldId": "8f6eb4d7-8ef7-4765-a507-aa2f4682ef50",
+          "status": "approved",
+          "createdAt": "2026-09-07T18:55:37.524Z",
+          "resolvedAt": "2026-09-08T18:55:37.524Z",
+          "fieldLabel": "Personal email",
+          "shareSessionId": "141538b0-c327-44e0-ba83-824e4183a4a6"
+        }
+      ],
+      "reconnectionSuggestions": [
+        {
+          "contactId": "f41b233b-beca-4391-b162-d07fad4f528c",
+          "subject": {
+            "displayName": "Lena Brandt",
+            "headline": "Founder & Creative Director, Studio Brandt"
+          },
+          "daysSinceInteraction": 210,
+          "connectionStrength": 0.1
+        }
+      ],
+      "shareSessionId": "ebd9e917-b160-45c0-898e-ff5d0fe396ed",
+      "shareExpiresAt": "2026-10-04T18:56:01.830Z"
+    },
+    "demo-devon-token": {
+      "ownerCard": {
+        "person": {
+          "id": "bb00bcc6-6d41-4c2a-89a6-e582c95e145c",
+          "displayName": "Devon Park",
+          "headline": "Account Executive, Northwind Cloud"
+        },
+        "card": {
+          "id": "b61c1efb-de41-49e5-a522-27120cedc2d3",
+          "label": "Default",
+          "isDefault": true,
+          "status": "active",
+          "fields": [
+            {
+              "id": "04b6b066-416a-422d-b92f-eca301ae3c5a",
+              "fieldType": "email",
+              "label": "Work email",
+              "value": "devon.park@northwind.cloud",
+              "visibility": "public",
+              "displayOrder": 0
+            },
+            {
+              "id": "0ce74afe-51e5-4352-bcdd-474acf8a9be5",
+              "fieldType": "text",
+              "label": "Territory",
+              "value": "EMEA mid-market",
+              "visibility": "public",
+              "displayOrder": 1
+            },
+            {
+              "id": "f8a46a58-81b9-4c25-9e1a-2b547e34bf2d",
+              "fieldType": "phone",
+              "label": "Direct line",
+              "value": "+1 415 555 0142",
+              "visibility": "link_only",
+              "displayOrder": 2
+            },
+            {
+              "id": "d8f93112-153c-4e3b-913d-f3554926a318",
+              "fieldType": "phone",
+              "label": "Mobile",
+              "value": "+1 415 555 0199",
+              "visibility": "request_required",
+              "displayOrder": 3
+            },
+            {
+              "id": "ec13173f-fc0f-4b94-8cfb-14b39ae9813d",
+              "fieldType": "text",
+              "label": "Quota notes",
+              "value": "Internal only",
+              "visibility": "hidden",
+              "displayOrder": 4
+            }
+          ]
+        }
+      },
+      "contacts": [
+        {
+          "id": "1a8e77b0-0bf8-4bc1-ab72-5026b28616a4",
+          "subject": {
+            "displayName": "Mara Oyelaran",
+            "headline": "Independent brand consultant"
+          },
+          "captureSource": "card_share",
+          "captureContext": "SaaStr Annual 2026 — hallway track",
+          "connectionId": "be9647bd-a05f-4aab-919d-6f788cd341ba",
+          "connectionStrength": 1,
+          "lastInteractionAt": "2026-09-25T18:55:37.539Z",
+          "createdAt": "2026-07-01T18:55:37.528Z"
+        }
+      ],
+      "contactDetails": {
+        "1a8e77b0-0bf8-4bc1-ab72-5026b28616a4": {
+          "id": "1a8e77b0-0bf8-4bc1-ab72-5026b28616a4",
+          "subject": {
+            "displayName": "Mara Oyelaran",
+            "headline": "Independent brand consultant"
+          },
+          "captureSource": "card_share",
+          "captureContext": "SaaStr Annual 2026 — hallway track",
+          "connectionId": "be9647bd-a05f-4aab-919d-6f788cd341ba",
+          "connectionStrength": 1,
+          "lastInteractionAt": "2026-09-25T18:55:37.539Z",
+          "createdAt": "2026-07-01T18:55:37.528Z",
+          "interactions": [
+            {
+              "id": "a56d19fb-260f-4f27-8cca-3e2b5e435549",
+              "channel": "meeting",
+              "summary": "Kickoff scheduled for next month",
+              "occurredAt": "2026-09-25T18:55:37.539Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "5371ce2d-2369-44a4-9d74-01cfcd156f5a",
+              "channel": "message",
+              "summary": "Quick Slack thread about timelines",
+              "occurredAt": "2026-09-10T18:55:37.538Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "aea7bb30-2fad-4ddd-9479-a4be154e9135",
+              "channel": "call",
+              "summary": "Walked through pricing tiers",
+              "occurredAt": "2026-08-30T18:55:37.537Z",
+              "loggedByPersonId": "bb00bcc6-6d41-4c2a-89a6-e582c95e145c"
+            },
+            {
+              "id": "7501e380-77b6-45cd-a3f1-003cdb8a7ea2",
+              "channel": "email",
+              "summary": "Sent over the positioning one-pager",
+              "occurredAt": "2026-08-13T18:55:37.536Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "dd7d2a69-da4d-460c-ad6b-62d025c7694b",
+              "channel": "meeting",
+              "summary": "Coffee at the conference, talked rebrand scope",
+              "occurredAt": "2026-07-23T18:55:37.536Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "65bd230d-9099-4efc-bcc9-697ddb297d60",
+              "channel": "note",
+              "summary": "Saved contact from shared card",
+              "occurredAt": "2026-07-01T18:55:37.533Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            }
+          ]
+        }
+      },
+      "fieldRequests": [],
+      "reconnectionSuggestions": [],
+      "shareSessionId": "06eb1f78-bad9-4263-a7b3-7cf5cc8e494f",
+      "shareExpiresAt": "2026-10-04T18:56:01.862Z"
+    },
+    "demo-priya-token": {
+      "ownerCard": {
+        "person": {
+          "id": "e4ba5b75-a433-449c-85d1-29074d0c4888",
+          "displayName": "Priya Raman",
+          "headline": "Head of IT Security, Meridian Health"
+        },
+        "card": {
+          "id": "8d60557d-40c6-4afb-83c3-e03e9436c803",
+          "label": "Default",
+          "isDefault": true,
+          "status": "active",
+          "fields": [
+            {
+              "id": "6152adfa-7371-477f-bb96-f1ebf3ad424c",
+              "fieldType": "email",
+              "label": "Work email",
+              "value": "p.raman@meridianhealth.org",
+              "visibility": "public",
+              "displayOrder": 0
+            },
+            {
+              "id": "b441a7f9-27a5-4bca-9d72-e4be5b6e457f",
+              "fieldType": "text",
+              "label": "Title",
+              "value": "Head of IT Security",
+              "visibility": "public",
+              "displayOrder": 1
+            },
+            {
+              "id": "bbff41fa-9e05-4e66-a8a4-5cdd61c58de4",
+              "fieldType": "url",
+              "label": "LinkedIn",
+              "value": "https://linkedin.com/in/priyaraman",
+              "visibility": "link_only",
+              "displayOrder": 2
+            },
+            {
+              "id": "51b17fc7-18b2-4597-9c34-6c00fa55e831",
+              "fieldType": "phone",
+              "label": "Desk",
+              "value": "+44 20 7946 0321",
+              "visibility": "request_required",
+              "displayOrder": 3
+            },
+            {
+              "id": "24d257a5-4e0f-4e2e-845f-463704545859",
+              "fieldType": "phone",
+              "label": "Personal mobile",
+              "value": "+44 7700 900444",
+              "visibility": "hidden",
+              "displayOrder": 4
+            }
+          ]
+        }
+      },
+      "contacts": [],
+      "contactDetails": {},
+      "fieldRequests": [],
+      "reconnectionSuggestions": [],
+      "shareSessionId": "72f7eb68-dc6e-4fa1-b732-16436e4d9164",
+      "shareExpiresAt": "2026-10-04T18:56:01.889Z"
+    },
+    "demo-yusuf-token": {
+      "ownerCard": {
+        "person": {
+          "id": "73bb3f76-c963-4000-8de7-adf5b4fbcf7f",
+          "displayName": "Yusuf Demir",
+          "headline": "Talent Partner, Lattice Search"
+        },
+        "card": {
+          "id": "46025737-7adc-4b3d-877d-97cb57ea63e6",
+          "label": "Default",
+          "isDefault": true,
+          "status": "active",
+          "fields": [
+            {
+              "id": "d56ca66c-7a30-42f9-a466-5a54d974d1ff",
+              "fieldType": "email",
+              "label": "Work email",
+              "value": "yusuf@latticesearch.com",
+              "visibility": "public",
+              "displayOrder": 0
+            },
+            {
+              "id": "a6599f21-04f8-4577-b5ae-8ae95db6e25f",
+              "fieldType": "url",
+              "label": "Booking link",
+              "value": "https://cal.com/yusuf",
+              "visibility": "public",
+              "displayOrder": 1
+            },
+            {
+              "id": "17438a12-736d-4d5d-b452-82107eb1d829",
+              "fieldType": "phone",
+              "label": "Mobile",
+              "value": "+49 151 2345 6789",
+              "visibility": "link_only",
+              "displayOrder": 2
+            },
+            {
+              "id": "78cfa756-01cd-41f6-a402-ed33ea1e96ab",
+              "fieldType": "email",
+              "label": "Referrals inbox",
+              "value": "refer@latticesearch.com",
+              "visibility": "request_required",
+              "displayOrder": 3
+            }
+          ]
+        }
+      },
+      "contacts": [],
+      "contactDetails": {},
+      "fieldRequests": [],
+      "reconnectionSuggestions": [],
+      "shareSessionId": "dd01d1a4-e469-4816-a5f5-9b1d2480cf33",
+      "shareExpiresAt": "2026-10-04T18:56:01.911Z"
+    },
+    "demo-lena-token": {
+      "ownerCard": {
+        "person": {
+          "id": "4006f236-5681-41e9-9fdf-b1b96e4adc7e",
+          "displayName": "Lena Brandt",
+          "headline": "Founder & Creative Director, Studio Brandt"
+        },
+        "card": {
+          "id": "6c5adacd-0896-4ac3-9194-b080b2d8bf61",
+          "label": "Default",
+          "isDefault": true,
+          "status": "active",
+          "fields": [
+            {
+              "id": "98f9ca32-398b-4ac2-aa83-4dbdd7284b5c",
+              "fieldType": "email",
+              "label": "Studio",
+              "value": "hello@studiobrandt.de",
+              "visibility": "public",
+              "displayOrder": 0
+            },
+            {
+              "id": "1a1bda78-6acf-4306-8c9b-555da9e82151",
+              "fieldType": "text",
+              "label": "Title",
+              "value": "Founder & Creative Director",
+              "visibility": "public",
+              "displayOrder": 1
+            },
+            {
+              "id": "90a48b1b-4eb7-496d-af9b-a12e97cded39",
+              "fieldType": "url",
+              "label": "Portfolio",
+              "value": "https://studiobrandt.de/work",
+              "visibility": "link_only",
+              "displayOrder": 2
+            },
+            {
+              "id": "58eb14be-7eb6-42c5-9ddb-971c49aa8825",
+              "fieldType": "phone",
+              "label": "Mobile",
+              "value": "+49 170 9876 543",
+              "visibility": "request_required",
+              "displayOrder": 3
+            }
+          ]
+        }
+      },
+      "contacts": [
+        {
+          "id": "dce7cde7-3c3e-487c-8918-5e410cbffa7a",
+          "subject": {
+            "displayName": "Mara Oyelaran",
+            "headline": "Independent brand consultant"
+          },
+          "captureSource": "card_share",
+          "captureContext": "Berlin design meetup, 2025",
+          "connectionId": "bb7a6a5d-4fef-47f2-8cda-96a33c4b6669",
+          "connectionStrength": 0.1,
+          "lastInteractionAt": "2026-03-01T18:55:37.567Z",
+          "createdAt": "2025-12-01T18:55:37.564Z"
+        }
+      ],
+      "contactDetails": {
+        "dce7cde7-3c3e-487c-8918-5e410cbffa7a": {
+          "id": "dce7cde7-3c3e-487c-8918-5e410cbffa7a",
+          "subject": {
+            "displayName": "Mara Oyelaran",
+            "headline": "Independent brand consultant"
+          },
+          "captureSource": "card_share",
+          "captureContext": "Berlin design meetup, 2025",
+          "connectionId": "bb7a6a5d-4fef-47f2-8cda-96a33c4b6669",
+          "connectionStrength": 0.1,
+          "lastInteractionAt": "2026-03-01T18:55:37.567Z",
+          "createdAt": "2025-12-01T18:55:37.564Z",
+          "interactions": [
+            {
+              "id": "479af3f5-c973-4798-b804-70ae09de6061",
+              "channel": "email",
+              "summary": "Swapped portfolio links, said we'd collaborate",
+              "occurredAt": "2026-03-01T18:55:37.567Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "f361f92e-f85f-49ad-87d7-2b4be415e53d",
+              "channel": "meeting",
+              "summary": "Drinks after the meetup talk",
+              "occurredAt": "2026-01-30T18:55:37.566Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            },
+            {
+              "id": "bf2f4b8b-6a4f-4d7b-994a-c8f78624340d",
+              "channel": "note",
+              "summary": "Saved contact from shared card",
+              "occurredAt": "2025-12-01T18:55:37.566Z",
+              "loggedByPersonId": "38d52dfc-e3bf-412f-9112-a373388ddbb2"
+            }
+          ]
+        }
+      },
+      "fieldRequests": [],
+      "reconnectionSuggestions": [
+        {
+          "contactId": "dce7cde7-3c3e-487c-8918-5e410cbffa7a",
+          "subject": {
+            "displayName": "Mara Oyelaran",
+            "headline": "Independent brand consultant"
+          },
+          "daysSinceInteraction": 210,
+          "connectionStrength": 0.1
+        }
+      ],
+      "shareSessionId": "075aacdb-2805-40fc-8d84-1c8c610e10c6",
+      "shareExpiresAt": "2026-10-04T18:56:01.938Z"
+    }
+  },
+  "shareSessions": {
+    "ebd9e917-b160-45c0-898e-ff5d0fe396ed": {
+      "person": {
+        "displayName": "Mara Oyelaran",
+        "headline": "Independent brand consultant"
+      },
+      "card": {
+        "id": "41d21575-0e6a-4b94-9a0b-d7fce1edce78",
+        "label": "Default"
+      },
+      "fields": [
+        {
+          "id": "fc97e514-8dc4-4263-ae94-837136c22c75",
+          "fieldType": "email",
+          "label": "Work email",
+          "value": "mara@oyelaran.studio",
+          "displayOrder": 0
+        },
+        {
+          "id": "64250ce1-e674-483d-b0cb-a25a9bdeb765",
+          "fieldType": "url",
+          "label": "Website",
+          "value": "https://oyelaran.studio",
+          "displayOrder": 1
+        },
+        {
+          "id": "accf6d14-e245-43d9-bc3c-9b2689887d29",
+          "fieldType": "phone",
+          "label": "Mobile",
+          "value": "+44 7700 900101",
+          "displayOrder": 2
+        }
+      ],
+      "requestableFields": [
+        {
+          "id": "8f6eb4d7-8ef7-4765-a507-aa2f4682ef50",
+          "fieldType": "email",
+          "label": "Personal email"
+        }
+      ]
+    },
+    "06eb1f78-bad9-4263-a7b3-7cf5cc8e494f": {
+      "person": {
+        "displayName": "Devon Park",
+        "headline": "Account Executive, Northwind Cloud"
+      },
+      "card": {
+        "id": "b61c1efb-de41-49e5-a522-27120cedc2d3",
+        "label": "Default"
+      },
+      "fields": [
+        {
+          "id": "04b6b066-416a-422d-b92f-eca301ae3c5a",
+          "fieldType": "email",
+          "label": "Work email",
+          "value": "devon.park@northwind.cloud",
+          "displayOrder": 0
+        },
+        {
+          "id": "0ce74afe-51e5-4352-bcdd-474acf8a9be5",
+          "fieldType": "text",
+          "label": "Territory",
+          "value": "EMEA mid-market",
+          "displayOrder": 1
+        },
+        {
+          "id": "f8a46a58-81b9-4c25-9e1a-2b547e34bf2d",
+          "fieldType": "phone",
+          "label": "Direct line",
+          "value": "+1 415 555 0142",
+          "displayOrder": 2
+        }
+      ],
+      "requestableFields": [
+        {
+          "id": "d8f93112-153c-4e3b-913d-f3554926a318",
+          "fieldType": "phone",
+          "label": "Mobile"
+        }
+      ]
+    },
+    "72f7eb68-dc6e-4fa1-b732-16436e4d9164": {
+      "person": {
+        "displayName": "Priya Raman",
+        "headline": "Head of IT Security, Meridian Health"
+      },
+      "card": {
+        "id": "8d60557d-40c6-4afb-83c3-e03e9436c803",
+        "label": "Default"
+      },
+      "fields": [
+        {
+          "id": "6152adfa-7371-477f-bb96-f1ebf3ad424c",
+          "fieldType": "email",
+          "label": "Work email",
+          "value": "p.raman@meridianhealth.org",
+          "displayOrder": 0
+        },
+        {
+          "id": "b441a7f9-27a5-4bca-9d72-e4be5b6e457f",
+          "fieldType": "text",
+          "label": "Title",
+          "value": "Head of IT Security",
+          "displayOrder": 1
+        },
+        {
+          "id": "bbff41fa-9e05-4e66-a8a4-5cdd61c58de4",
+          "fieldType": "url",
+          "label": "LinkedIn",
+          "value": "https://linkedin.com/in/priyaraman",
+          "displayOrder": 2
+        }
+      ],
+      "requestableFields": [
+        {
+          "id": "51b17fc7-18b2-4597-9c34-6c00fa55e831",
+          "fieldType": "phone",
+          "label": "Desk"
+        }
+      ]
+    },
+    "dd01d1a4-e469-4816-a5f5-9b1d2480cf33": {
+      "person": {
+        "displayName": "Yusuf Demir",
+        "headline": "Talent Partner, Lattice Search"
+      },
+      "card": {
+        "id": "46025737-7adc-4b3d-877d-97cb57ea63e6",
+        "label": "Default"
+      },
+      "fields": [
+        {
+          "id": "d56ca66c-7a30-42f9-a466-5a54d974d1ff",
+          "fieldType": "email",
+          "label": "Work email",
+          "value": "yusuf@latticesearch.com",
+          "displayOrder": 0
+        },
+        {
+          "id": "a6599f21-04f8-4577-b5ae-8ae95db6e25f",
+          "fieldType": "url",
+          "label": "Booking link",
+          "value": "https://cal.com/yusuf",
+          "displayOrder": 1
+        },
+        {
+          "id": "17438a12-736d-4d5d-b452-82107eb1d829",
+          "fieldType": "phone",
+          "label": "Mobile",
+          "value": "+49 151 2345 6789",
+          "displayOrder": 2
+        }
+      ],
+      "requestableFields": [
+        {
+          "id": "78cfa756-01cd-41f6-a402-ed33ea1e96ab",
+          "fieldType": "email",
+          "label": "Referrals inbox"
+        }
+      ]
+    },
+    "075aacdb-2805-40fc-8d84-1c8c610e10c6": {
+      "person": {
+        "displayName": "Lena Brandt",
+        "headline": "Founder & Creative Director, Studio Brandt"
+      },
+      "card": {
+        "id": "6c5adacd-0896-4ac3-9194-b080b2d8bf61",
+        "label": "Default"
+      },
+      "fields": [
+        {
+          "id": "98f9ca32-398b-4ac2-aa83-4dbdd7284b5c",
+          "fieldType": "email",
+          "label": "Studio",
+          "value": "hello@studiobrandt.de",
+          "displayOrder": 0
+        },
+        {
+          "id": "1a1bda78-6acf-4306-8c9b-555da9e82151",
+          "fieldType": "text",
+          "label": "Title",
+          "value": "Founder & Creative Director",
+          "displayOrder": 1
+        },
+        {
+          "id": "90a48b1b-4eb7-496d-af9b-a12e97cded39",
+          "fieldType": "url",
+          "label": "Portfolio",
+          "value": "https://studiobrandt.de/work",
+          "displayOrder": 2
+        }
+      ],
+      "requestableFields": [
+        {
+          "id": "58eb14be-7eb6-42c5-9ddb-971c49aa8825",
+          "fieldType": "phone",
+          "label": "Mobile"
+        }
+      ]
+    }
+  }
+}

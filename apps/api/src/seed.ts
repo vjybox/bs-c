@@ -315,8 +315,23 @@ async function main(): Promise<void> {
   );
   if (!schemaCheck.rows[0].ok) {
     console.error(
-      "Schema is missing. The schema is only applied when the Postgres volume is first created.\n" +
-        "Run: docker compose down -v && docker compose up --build",
+      [
+        "Schema is missing — the database has no tables, so there is nothing to seed.",
+        "",
+        "Two things cause this:",
+        "",
+        "1. You started the stack with only docker-compose.yml, not the whole project folder.",
+        "   Compose bind-mounts ./apps/api/src/schema.sql into Postgres to create the tables.",
+        "   If that file isn't there, Docker silently creates an empty DIRECTORY in its place",
+        "   and Postgres starts up with nothing in it. Copy the entire project folder to the",
+        "   host and point your compose project at that folder, then: docker compose down -v",
+        "",
+        "2. The Postgres volume already existed from an earlier run. The schema is only applied",
+        "   the first time the volume is created, so a later schema change does nothing.",
+        "   Reset it with: docker compose down -v && docker compose up --build",
+        "",
+        "Both fixes delete the database volume. That is safe here — this stack holds only demo data.",
+      ].join("\n"),
     );
     process.exitCode = 1;
     return;

@@ -43,6 +43,52 @@ npm run seed --workspace=apps/api
 
 It is idempotent — it exits without doing anything if the database already has people in it.
 
+## Running it on a Synology NAS (Container Manager)
+
+> **Copy the whole project folder to the NAS — not just `docker-compose.yml`.** Compose
+> bind-mounts `./apps/api/src/schema.sql` into Postgres to create the tables, and all three
+> services build from source in this folder. If you paste only the compose file into Container
+> Manager's editor, Docker creates an empty *directory* where that file should be, Postgres
+> starts with no tables, the seed fails, and the API never starts — with nothing on screen
+> explaining why. The seed prints the fix if you hit it anyway.
+
+1. **Copy the project** to a shared folder, e.g. `/volume1/docker/digital-identity`. File
+   Station, `git clone` over SSH, or drag-and-drop all work.
+
+2. **Create a `.env`** next to `docker-compose.yml`. Copy `.env.example` and set at minimum:
+
+   ```
+   WEB_BASE_URL=http://192.168.1.50:8080
+   ```
+
+   Use your NAS's real LAN address (DSM → Control Panel → Network → Network Interface). This
+   one matters more than it looks: share links and QR codes are generated from it, so if it
+   still says `localhost`, every QR code you scan from a phone points the phone at itself.
+
+   If something already holds port 8080 — Web Station and a few other DSM packages do — set
+   `WEB_PORT=8788` (or anything free) and use the same port in `WEB_BASE_URL`.
+
+3. **Container Manager → Project → Create.** Set the path to the folder from step 1; it will
+   detect `docker-compose.yml`. Start it. The first build takes a while: it compiles the API
+   and bundles the web app on the NAS.
+
+4. **Open `http://<nas-ip>:8080`** and click *"Sign in as a demo persona."*
+
+Only the web port is published. Postgres and the API are reachable only from inside the compose
+network, which is why the default database password is harmless — nothing outside the stack can
+connect to it.
+
+**One thing to decide deliberately:** `DEMO_MODE` defaults to `true`, which enables
+`GET /api/demo/personas`. That endpoint hands out edit tokens — full access to all five demo
+identities — to anyone who can reach the app. On a home LAN, for a demo, that is the point. If
+this NAS is reachable from anywhere else, or you put it behind a reverse proxy, set
+`DEMO_MODE=false` in `.env`; the route then isn't registered at all and returns 404.
+
+Architecture is not a concern: `postgres:16-alpine`, `node:22-slim` and `nginx:1.27-alpine` are
+all multi-arch, and the dependency tree has no native compilation, so this builds on x86_64 and
+ARM64 Synology models alike. On a 2 GB model the build may be tight — it runs `npm ci` twice
+plus `tsc` and Vite — in which case build the images on a desktop and load them onto the NAS.
+
 ## Local development
 
 1. Start Postgres 16 and create the database:
@@ -64,6 +110,27 @@ It is idempotent — it exits without doing anything if the database already has
    ```
    The web app proxies `/api/*` to `http://localhost:4000` (see `apps/web/vite.config.ts`).
    Open `http://localhost:5173`.
+
+## Static demo build
+
+There is a second build mode that produces a fully standalone version of the web app with no
+backend at all — useful for sharing a clickable walkthrough:
+
+```
+npm run build --workspace=apps/web -- --mode demo --outDir dist-demo
+```
+
+How it works: every network call in the app goes through `apps/web/src/api.ts`, so the demo
+build swaps that one module for `api.demo.ts` (see the `useDemoApi` plugin in
+`apps/web/vite.config.ts`). Reads are served from `apps/web/src/demo-fixtures.json`, which was
+captured verbatim from the real API running against a seeded database — so the data shown is
+genuine backend output rather than a re-derivation of it. Writes are simulated in memory and
+reset on reload.
+
+The build also switches to `HashRouter` (no server to rewrite unknown paths) and uses relative
+asset paths, so `dist-demo/` can be served from any static host or subdirectory. A banner marks
+it as a demo. To refresh the fixtures after changing the seed or an API response shape, run the
+API against a seeded database and re-capture; `demo-fixtures.json` records its `capturedAt`.
 
 ## Running tests
 

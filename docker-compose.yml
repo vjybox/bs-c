@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: digital_identity
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -13,8 +13,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    ports:
-      - "5432:5432"
+    # Deliberately not published. Only api/seed reach it, over the compose network.
+    # Publishing it would put these credentials on your LAN.
 
   # One-shot: populates demo data, then exits 0. Idempotent — re-running `up` is a no-op
   # once the database has people in it. Reuses the api image (cached layers, no second build).
@@ -24,7 +24,7 @@ services:
       dockerfile: apps/api/Dockerfile
     command: ["node", "dist/seed.js"]
     environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/digital_identity
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/digital_identity
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,19 +39,21 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/digital_identity
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/digital_identity
       PORT: "4000"
-      WEB_BASE_URL: http://localhost:8080
-      # Enables GET /api/demo/personas, which hands out edit tokens. Local demo only —
-      # never set this in a real deployment.
-      DEMO_MODE: "true"
+      # MUST match the address you actually open in a browser. Share links and QR codes are
+      # built from this, so leaving it as localhost on a NAS produces unscannable codes.
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:8080}
+      # Enables GET /api/demo/personas, which hands out edit tokens — full access to every
+      # demo identity, to anyone who can reach this app. Fine for a home-network demo;
+      # set DEMO_MODE=false for anything else.
+      DEMO_MODE: ${DEMO_MODE:-true}
     depends_on:
       postgres:
         condition: service_healthy
       seed:
         condition: service_completed_successfully
-    ports:
-      - "4000:4000"
+    # Deliberately not published. nginx reaches it in-network as http://api:4000.
 
   web:
     build:
@@ -60,7 +62,7 @@ services:
     depends_on:
       - api
     ports:
-      - "8080:80"
+      - "${WEB_PORT:-8080}:80"
 
 volumes:
   postgres-data:

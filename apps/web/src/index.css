@@ -348,3 +348,17 @@ button {
   width: 100%;
   max-width: 420px;
 }
+
+/* Only rendered by the static demo build. */
+.demo-banner {
+  background: #78350f;
+  color: #fef3c7;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.demo-banner strong {
+  color: #fffbeb;
+}
