@@ -199,6 +199,20 @@ export async function logInteraction(
   return handle(res);
 }
 
+export interface DemoPersona {
+  displayName: string;
+  headline: string | null;
+  cardId: string;
+  editToken: string;
+}
+
+/** Returns null when demo mode is off — the route is not registered, so it 404s. */
+export async function getDemoPersonas(): Promise<DemoPersona[] | null> {
+  const res = await fetch("/api/demo/personas");
+  if (res.status === 404) return null;
+  return handle(res);
+}
+
 export async function getReconnectionSuggestions(
   editToken: string,
 ): Promise<ReconnectionSuggestion[]> {

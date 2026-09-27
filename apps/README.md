@@ -6,6 +6,43 @@ intentionally omits real Account/OAuth auth (ADR-0008) — `edit_token` stands i
 has never been deployed anywhere. Everything below is either run locally or build-verified
 locally; no external hosting account has been touched.
 
+## Trying it out (one command)
+
+```
+docker compose up --build
+```
+
+Then open `http://localhost:8080` and click **"Sign in as a demo persona"**. Compose brings up
+Postgres (applying `apps/api/src/schema.sql` on first boot), seeds demo data, and serves the
+built web app behind nginx with `/api/*` proxied to the API. Nothing else to install.
+
+The seed creates five people from the design corpus's personas. **Mara Oyelaran** has the most
+to look at: four contacts with different relationship strengths, an interaction history going
+back months, a pending field request to approve, and one relationship that has gone quiet so
+reconnection suggestions actually fire.
+
+Demo sign-in is gated: `GET /api/demo/personas` hands out edit tokens, so it is only registered
+when `DEMO_MODE=true`, which `docker-compose.yml` sets and a real deployment must not. With the
+flag off the route does not exist and returns 404.
+
+The schema is applied via Postgres's `/docker-entrypoint-initdb.d`, which only runs when the
+volume is first created. After changing `schema.sql`, run `docker compose down -v` before
+bringing it back up, or the change silently does nothing. The seed detects a missing schema and
+says so rather than failing obscurely.
+
+> **Not verified here.** `docker compose up` has never been executed in the environment this was
+> written in — no Docker daemon is available, and outbound access to Docker Hub is restricted.
+> The application logic behind it (seed script, demo endpoint, full browser flow) was verified
+> against a local Postgres; the image build and compose orchestration were not.
+
+To reseed by hand, or to seed a non-Docker database:
+
+```
+npm run seed --workspace=apps/api
+```
+
+It is idempotent — it exits without doing anything if the database already has people in it.
+
 ## Local development
 
 1. Start Postgres 16 and create the database:
@@ -14,7 +51,8 @@ locally; no external hosting account has been touched.
    createdb digital_identity
    psql digital_identity -f apps/api/src/schema.sql
    ```
-2. Configure env vars:
+2. Configure env vars (optional — the code defaults to the same values, and the dev script
+   uses `--env-file-if-exists`, so a missing `.env` is not fatal):
    ```
    cp apps/api/.env.example apps/api/.env
    cp apps/web/.env.example apps/web/.env   # currently no variables required

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createCard, setStoredAuth, type NewFieldInput } from "../api";
 import type { FieldType, FieldVisibility } from "../types";
 
@@ -55,6 +55,10 @@ export default function CreateCard() {
   return (
     <div className="page">
       <h1>Create your digital card</h1>
+      <p className="muted-text">
+        Just looking around? <Link to="/demo">Sign in as a demo persona</Link> to explore with
+        sample contacts and history.
+      </p>
       <form onSubmit={handleSubmit} className="form">
         <label>
           Name

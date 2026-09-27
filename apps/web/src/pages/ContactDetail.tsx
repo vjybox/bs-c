@@ -97,8 +97,8 @@ export default function ContactDetailPage() {
       )}
 
       <h2>Log Interaction</h2>
-      <form onSubmit={handleLogInteraction}>
-        <div>
+      <form onSubmit={handleLogInteraction} className="form">
+        <div className="form-field">
           <label htmlFor="channel">Channel</label>
           <select
             id="channel"
@@ -112,7 +112,7 @@ export default function ContactDetailPage() {
             ))}
           </select>
         </div>
-        <div>
+        <div className="form-field">
           <label htmlFor="summary">Notes (optional)</label>
           <textarea
             id="summary"
