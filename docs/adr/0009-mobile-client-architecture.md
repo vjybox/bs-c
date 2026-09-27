@@ -1,6 +1,6 @@
 # ADR-0009: Mobile Client Architecture
 
-**Status**: Accepted · **Date**: 2026-06-30 · **Related**: Product Philosophy's "mobile-first" tenet ([`00-vision/00-product-philosophy.md`](../00-vision/00-product-philosophy.md))
+**Status**: Accepted · **Date**: 2026-06-30 · **Related**: Product Philosophy's "mobile-first, surface-honest" tenet ([`00-vision/00-product-philosophy.md`](../00-vision/00-product-philosophy.md) §4), made checkable in [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) §5 · **Extended by**: [ADR-0014](0014-desktop-strategy-responsive-web.md) (desktop), [ADR-0015](0015-web-client-architecture.md) (web)
 
 ## Context
 

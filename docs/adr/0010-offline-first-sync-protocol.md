@@ -1,6 +1,6 @@
 # ADR-0010: Offline-First Sync Protocol
 
-**Status**: Accepted · **Date**: 2026-06-30 · **Related**: Product Philosophy's "offline-first where possible" tenet ([`00-vision/00-product-philosophy.md`](../00-vision/00-product-philosophy.md))
+**Status**: Accepted · **Date**: 2026-06-30 · **Related**: Product Philosophy's "offline-first where the moment demands it" tenet ([`00-vision/00-product-philosophy.md`](../00-vision/00-product-philosophy.md) §4); [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) §5 states which journeys carry the offline obligation and which do not
 
 ## Context
 

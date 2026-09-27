@@ -16,5 +16,11 @@ Lightweight Nygard-style ADRs (Context / Decision / Alternatives Considered / Co
 | [0010](0010-offline-first-sync-protocol.md) | Offline-first sync protocol | Accepted | 2026-06-30 |
 | [0011](0011-search-and-relevance-architecture.md) | Search and relevance architecture | Accepted | 2026-06-30 |
 | [0012](0012-multi-region-data-residency.md) | Multi-region data residency | Proposed | 2026-06-30 |
+| [0013](0013-event-as-first-class-primitive.md) | Event as a first-class primitive | Accepted | 2026-09-27 |
+| [0014](0014-desktop-strategy-responsive-web.md) | Desktop strategy: responsive web, no native shell | Accepted | 2026-09-27 |
+| [0015](0015-web-client-architecture.md) | Web client architecture | Accepted | 2026-09-27 |
+| [0016](0016-public-company-directory-closed-people-graph.md) | Public company directory, closed people graph | Accepted | 2026-09-27 |
 
 ADR-0012 is marked **Proposed** rather than **Accepted**: it depends on real enterprise contractual demand that does not yet exist, so it documents the planned approach without committing infrastructure spend ahead of need.
+
+ADR-0013 through ADR-0016 were added in corpus v0.2 and are narrated in [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) rather than in an earlier architecture doc. ADR-0016 is the corpus's only **scoped exception** to another accepted ADR — it narrows ADR-0001's absolute tenant isolation for non-person firmographic data, and states that boundary explicitly rather than leaving it implied.

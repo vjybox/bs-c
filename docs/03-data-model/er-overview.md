@@ -1,6 +1,6 @@
 # Cross-Module Entity-Relationship Overview
 
-> Status: v0.1 · Owner: Architecture · Last updated: 2026-06-30
+> Status: v0.2 · Owner: Architecture · Last updated: 2026-09-27
 > Scope: design-level ER diagram (key entities and relationships, not full DDL/column lists). Per-module docs reference this diagram rather than redefining shared entities.
 
 ## 1. Consolidated Diagram
@@ -19,6 +19,14 @@ erDiagram
     CONNECTION ||--o{ INTERACTION : "logs touchpoint"
     CONTACT }o--o{ TAG : tagged
     CONTACT }o--o{ NETWORK_SEGMENT : "grouped into"
+    CONTACT ||--o{ CONTACT : "reportsTo (owner-private edge)"
+
+    COMPANY_PROFILE |o--o{ CONTACT : "placed under (owner-private tree)"
+    ORGANIZATION }o--o| COMPANY_PROFILE : "may link by domain"
+
+    EVENT ||--o{ EVENT_PARTICIPATION : "records presence"
+    PERSON ||--o{ EVENT_PARTICIPATION : attends
+    EVENT |o--o{ CONTACT : "contextualizes capture"
 
     PERSON ||--o{ AI_AGENT : owns
     AI_AGENT ||--o{ CONVERSATION : has
@@ -52,7 +60,8 @@ erDiagram
 | Entity | Owning Module | Referenced By |
 |---|---|---|
 | Person, Account, Organization, Membership, DigitalCard, CardField, VerificationRecord | Identity & Card Core | Every other module (by ID, never duplicated) |
-| Contact, Connection, Interaction, Tag, NetworkSegment | Contacts / Networking Graph | CRM (deal relationship context), AI Assistant Layer (enrichment context) |
+| Contact, Connection, Interaction, Tag, NetworkSegment, Event, EventParticipation | Contacts / Networking Graph | CRM (deal relationship context), AI Assistant Layer (enrichment context, batch follow-up grouping by `Event`) |
+| CompanyProfile | Identity & Card Core | Contacts (org-tree placement via `Contact.companyProfileId`), CRM (account context), Discovery. **The corpus's only tenant-less entity** — global firmographic reference data carrying no person-identifying field, per [ADR-0016](../adr/0016-public-company-directory-closed-people-graph.md) |
 | AIAgent, Conversation, Message, AITaskInvocation, KnowledgeContextRef | AI Assistant Layer | All modules (as a context consumer via `KnowledgeContextRef`/`EntityRef`) |
 | Pipeline, Stage, Deal, DealParticipant, Activity, PipelineAutomationRule | CRM / Relationship Pipeline | Automation (action targets), Networking (relationship context) |
 | WorkflowDefinition, TriggerConfig, ConditionNode, ActionNode, WorkflowRun, RunStepLog | Automation & Workflow Engine | All modules (as event consumers/producers) |
@@ -79,3 +88,5 @@ All condensed-module entities that need to reference core or other-module data d
 ## 4. Design Coherence Note
 
 The recurring pattern across this diagram is: **exactly one** owning module per entity, **zero** duplicated profile/contact fields outside Identity & Card Core, and **one** polymorphic cross-module reference shape (`EntityRef`) reused by Automation, Security, and AI rather than each module inventing its own. This is the concrete data-modeling discipline that keeps "one identity graph, many views" (see [`00-vision/00-product-philosophy.md`](../00-vision/00-product-philosophy.md)) true as the module count grows.
+
+One deliberate asymmetry is worth naming: every entity above is tenant-scoped **except `CompanyProfile`**, which is global by design so that firmographic data is enriched once platform-wide rather than re-derived per tenant. The org tree that renders beneath a `CompanyProfile` is *not* global — it is composed solely of the viewing owner's own `Contact` rows, so "a viewer sees only their own contacts" holds by construction rather than by a permission filter. That split is the whole of the exception, and it is stated in [ADR-0016](../adr/0016-public-company-directory-closed-people-graph.md) and [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) §9.

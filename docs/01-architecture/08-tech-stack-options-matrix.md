@@ -1,6 +1,6 @@
 # Tech Stack Options Matrix (Decision Roll-Up)
 
-> Status: v0.1 · Owner: Architecture · Last updated: 2026-06-30
+> Status: v0.2 · Owner: Architecture · Last updated: 2026-09-27
 > Purpose: one scannable table of every alternatives-considered decision in this corpus, so "never lock into today's technology" is auditable at a glance rather than buried across nine documents.
 
 | Decision | Options Considered | Recommendation | Migration Trigger | Detail |
@@ -17,6 +17,10 @@
 | Offline sync | CRDT / Operational Transform / Last-write-wins+versioning | Last-write-wins+versioning for v1; CRDT for collaborative fields | Genuine concurrent-edit collaboration needs (e.g. shared Knowledge docs) outgrow LWW | [ADR-0010](../adr/0010-offline-first-sync-protocol.md) |
 | Search & relevance | Postgres FTS / OpenSearch / Vector-only semantic | Postgres FTS for v1, hybrid with embeddings for semantic ranking | Query latency/relevance SLO breach at scale | [ADR-0011](../adr/0011-search-and-relevance-architecture.md) |
 | Multi-region/residency | Single-region+DR / Active-active multi-region / Regional data pods | Single-region+DR for v1; regional pods for enterprise residency tenants | Enterprise contractual data-residency requirement | [ADR-0012](../adr/0012-multi-region-data-residency.md) |
+| Event modelling | Free-text tag on Contact / Attribute on Interaction / First-class entity / Extend Meetings | First-class minimal `Event` + `EventParticipation` | Cross-attendee event dedup demand outgrows lightweight domain/date matching | [ADR-0013](../adr/0013-event-as-first-class-primitive.md) |
+| Desktop client | Electron/Tauri shell / React Native for Desktop / Responsive web at large breakpoints | Responsive web at large breakpoints, no native shell | Demonstrated need for OS-level capture (global hotkey, menu bar) at desk | [ADR-0014](../adr/0014-desktop-strategy-responsive-web.md) |
+| Web client | React Native for Web / Separate React+TS app sharing logic only / No web client | Separate React+TS app; shared business-logic and API layers, independent component layer | Component-layer duplication cost exceeds the ergonomics gain for desktop-shaped workflows | [ADR-0015](../adr/0015-web-client-architecture.md) |
+| Company directory scope | Global tenant-less record / Per-tenant company records / Crowdsourced public org chart | Global `CompanyProfile`, firmographic data only; people graph stays closed | Abuse/dedup load on the global write path outgrows lightweight moderation | [ADR-0016](../adr/0016-public-company-directory-closed-people-graph.md) |
 
 ## How to Read This Table
 

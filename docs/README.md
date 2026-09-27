@@ -1,6 +1,6 @@
 # Digital Identity Platform — Documentation Corpus
 
-> Status: v0.1 (initial corpus) · Last updated: 2026-06-30 · See [`CHANGELOG.md`](CHANGELOG.md) for revision history and [`TODO.md`](TODO.md) for the v0.2 backlog.
+> Status: v0.2 · Last updated: 2026-09-27 · See [`CHANGELOG.md`](CHANGELOG.md) for revision history and [`TODO.md`](TODO.md) for the remaining backlog.
 
 This is the design documentation for the Digital Identity Platform — positioned as "the operating system for professional identity": a single, AI-native system unifying identity, networking, reputation, portfolio, certifications, documents, meetings, AI assistants, knowledge, CRM, collaboration, and communication, which today live fragmented across a digital-business-card app, a CRM, a knowledge base, a meeting tool, and a handful of point integrations between them. See [`00-vision/00-product-philosophy.md`](00-vision/00-product-philosophy.md) for the full thesis and explicit non-goals (this is not a clone of any single named competitor).
 
@@ -11,7 +11,7 @@ This corpus is pure design documentation — Markdown + Mermaid diagrams, no app
 Read in this order if you're new to it:
 
 1. **Vision** (`00-vision/`) — why this platform exists, who it's for, what "done" looks like.
-2. **Architecture** (`01-architecture/`) — the master technical decisions every module builds on: service decomposition, data architecture, AI abstraction, automation engine, API gateway strategy, security, scalability, observability, and a consolidated tech-stack matrix.
+2. **Architecture** (`01-architecture/`) — the master technical decisions every module builds on: service decomposition, data architecture, AI abstraction, automation engine, API gateway strategy, security, scalability, observability, and a consolidated tech-stack matrix. This tier also holds the [Experience & Interaction Rulebook](01-architecture/09-experience-and-interaction-rulebook.md) — the binding, numbered product rules (friction budgets, surface classes, the public/private boundary) that every module doc must satisfy.
 3. **ADRs** (`adr/`) — the same decisions in formal, scannable Architecture Decision Record format, for when you need the "what we decided and why" without the narrative prose.
 4. **Modules** (`02-modules/`) — the ~16 product modules, at two depth tiers (see [`02-modules/README.md`](02-modules/README.md)).
 5. **Data Model** (`03-data-model/`) — the consolidated entity-relationship view across every module.
@@ -24,10 +24,10 @@ docs/
 ├── CHANGELOG.md                Keep-a-Changelog history of this corpus
 ├── TODO.md                     v0.2 backlog, deferred decisions, rolled-up future-feature proposals
 ├── 00-vision/                  product philosophy, personas & JTBD
-├── 01-architecture/            9 master architecture/decision docs
+├── 01-architecture/            9 master architecture/decision docs + the experience rulebook
 ├── 02-modules/                 6 flagship (full-depth) + 10 condensed module docs
 ├── 03-data-model/              consolidated cross-module ER overview
-└── adr/                        12 Architecture Decision Records + index
+└── adr/                        16 Architecture Decision Records + index
 ```
 
 ## Conventions
@@ -61,6 +61,7 @@ A handful of patterns recur across nearly every doc in this corpus. Understandin
 | Trigger→Condition→Action workflow DAG | [`01-architecture/03-automation-workflow-engine.md`](01-architecture/03-automation-workflow-engine.md) | Automation & Workflow Engine module, referenced by Communication, Collaboration, Knowledge |
 | Modular monolith + event-bus contract | [`01-architecture/00-system-architecture.md`](01-architecture/00-system-architecture.md) | Every module's Backend Architecture section |
 | "Defer the expensive decision, keep the seam real" | Recurring pattern across ADR-0002 (vector DB), ADR-0006 (automation engine), ADR-0012 (multi-region) | Anywhere a v1 choice is paired with an explicit, numeric migration trigger |
+| Friction budget, surface class, and the public/private boundary | [`01-architecture/09-experience-and-interaction-rulebook.md`](01-architecture/09-experience-and-interaction-rulebook.md) §3, §5, §10 | Every module's UX Flow, Mobile/Surface Considerations, and Privacy sections — the rulebook outranks module docs on all three |
 
 ## Status Legend
 

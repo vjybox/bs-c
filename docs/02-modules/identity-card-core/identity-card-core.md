@@ -83,7 +83,7 @@ Key fields (design-level, not full DDL):
 
 - **Person**: `id`, `displayName`, `primaryPhotoUrl`, `headline`, `defaultCardId`, `tenantId`, `createdAt`, `status` (`active`/`deactivated`).
 - **Account**: `id`, `personId` (FK), `authMethod` (`password`/`oauth:google`/`sso:saml`/`passkey`), `externalId`, `lastUsedAt`.
-- **Organization**: `id`, `name`, `domain`, `tenantId`, `brandConfig` (logo, color, font — JSON), `verificationStatus`.
+- **Organization**: `id`, `name`, `domain`, `tenantId`, `brandConfig` (logo, color, font — JSON), `verificationStatus`. **Not to be confused with `CompanyProfile`** — an `Organization` is tenant-scoped and models an employer that is a customer of this platform; a `CompanyProfile` is a global, tenant-less firmographic record for any company in the world, including ones nobody here works for. An `Organization` may link to a `CompanyProfile` by `domain`, but the two rows stay distinct ([ADR-0016](../../adr/0016-public-company-directory-closed-people-graph.md), [`01-architecture/09-experience-and-interaction-rulebook.md`](../../01-architecture/09-experience-and-interaction-rulebook.md) §9.1).
 - **Membership**: `id`, `personId` (FK), `organizationId` (FK), `role`, `title`, `startDate`, `endDate` (nullable = current), `cardTemplateId` (nullable FK).
 - **DigitalCard**: `id`, `personId` (FK), `label` (e.g., "Sales"), `theme` (JSON), `cardTemplateId` (nullable FK, set when org-governed), `isDefault`, `status` (`active`/`revoked`), `createdAt`, `updatedAt`.
 - **CardField**: `id`, `cardId` (FK), `fieldType` (`text`/`phone`/`email`/`url`/`social`/`custom`), `label`, `value`, `visibility` (`public`/`link_only`/`request_required`/`hidden`), `displayOrder`, `lockedByTemplate` (bool).

@@ -1,6 +1,6 @@
 # Security, Privacy, and Compliance Framework
 
-> Status: v0.1 · Owner: Security · Last updated: 2026-06-30 · Formalized in [ADR-0001](../adr/0001-multi-tenant-data-isolation.md) and [ADR-0008](../adr/0008-identity-and-auth-strategy.md)
+> Status: v0.2 · Owner: Security · Last updated: 2026-09-27 · Formalized in [ADR-0001](../adr/0001-multi-tenant-data-isolation.md) and [ADR-0008](../adr/0008-identity-and-auth-strategy.md); [ADR-0016](../adr/0016-public-company-directory-closed-people-graph.md) carves the corpus's one scoped exception to ADR-0001
 > See also: [`02-modules/security-compliance-center/security-compliance-center.md`](../02-modules/security-compliance-center/security-compliance-center.md) for the user/admin-facing product surface.
 
 ## 1. Threat Model Summary
@@ -11,7 +11,7 @@ Primary asset at risk: the identity/relationship graph itself — professional c
 
 | Class | Examples | Handling |
 |---|---|---|
-| Public | Card fields marked shareable, public portfolio items | No special handling beyond integrity |
+| Public | Card fields marked shareable, public portfolio items, `CompanyProfile` firmographic records | No special handling beyond integrity. `CompanyProfile` is the platform's only tenant-less entity and MUST carry no person-identifying data — see [ADR-0016](../adr/0016-public-company-directory-closed-people-graph.md) and [`09-experience-and-interaction-rulebook.md`](09-experience-and-interaction-rulebook.md) §9 |
 | Internal | CRM pipeline data, automation definitions | Tenant-isolated, standard encryption at rest/in transit |
 | Sensitive PII | Contact personal details, meeting notes, raw AI prompts containing personal data | Tenant-isolated + redaction-before-third-party-AI-call ([`02-ai-abstraction-layer.md`](02-ai-abstraction-layer.md) §6) + field-level encryption for highest-sensitivity fields |
 | Regulated/Credential | Certification/verification records, identity-verification documents | Sensitive PII handling + immutable audit trail + retention policy aligned to credentialing-body requirements |
@@ -42,6 +42,7 @@ Every state-changing action (human or automation- or AI-initiated) emits an `Aud
 - **Right to erasure**: a `DataSubjectRequest` triggers a fan-out deletion across every module via the event bus, using the same `EntityRef`-addressed mechanism as audit logging and automation — deletion is generic platform infrastructure, not a per-module bespoke script.
 - **Data minimization**: AI redaction-before-send (§2 table) and field-level encryption are applied by default to the Sensitive PII class, not opt-in.
 - **Data residency**: tenant-level residency constraints flow into both the `RoutingPolicy` (AI calls, [`02-ai-abstraction-layer.md`](02-ai-abstraction-layer.md)) and the database-per-tenant placement decision (§1 of [`01-data-architecture.md`](01-data-architecture.md)) — see [ADR-0012](../adr/0012-multi-region-data-residency.md).
+- **User-visible privacy rules**: this document owns the *mechanism* (classification, RBAC, redaction, audit). The *rules those mechanisms must deliver* — the four-level visibility vocabulary, the rule that a `Contact` is never readable by its subject `Person`, and the prohibition on AI surfacing a field the requester could not see unaided — are stated in [`09-experience-and-interaction-rulebook.md`](09-experience-and-interaction-rulebook.md) §10. Where that document's §10.7 applies, a feature whose boundary cannot yet be enforced by §4 above ships disabled rather than best-effort.
 
 ## 7. Compliance Posture Targets
 

@@ -230,7 +230,7 @@ Module-specific deltas only; platform-wide RBAC, `PolicyBinding`, and audit logg
 
 ## 18. Open Questions
 
-- Should `Connection.strength` and visibility settings be symmetric (both parties see/control the same edge) or can each Person independently restrict visibility of a shared Connection without the other's knowledge — and if asymmetric, how is that reconciled in mutual-connection discovery (§13)?
+- ~~Should `Connection` visibility be symmetric or independently restrictable per Person?~~ **Settled in corpus v0.2**: [`01-architecture/09-experience-and-interaction-rulebook.md`](../../01-architecture/09-experience-and-interaction-rulebook.md) §10.6 makes visibility subject-controlled per endpoint, and §8.5 requires mutual-connection results to omit a restricted edge silently rather than showing it redacted. Deliberate asymmetry beyond that now needs its own ADR. `Connection.strength` symmetry remains open and is covered by the decay-curve question below.
 - What is the default decay curve for relationship-strength scoring (§9), and should it be configurable per-tenant/per-user, or is a single platform-wide default sufficient for v1?
 - For org-retained relationships (§13, §16), what is the precise default when an employee departs and no explicit policy was configured at capture time — fully personal (status quo individual ownership), fully org-retained, or blocked pending admin decision?
 - Should `unmatchedProfile` Contacts (captured from a non-platform-user) ever be proactively matched/linked automatically when the subject later joins the platform, or should linking always require explicit user confirmation given the privacy sensitivity of silently connecting a paper-card scan to a real platform identity?

@@ -32,7 +32,8 @@ Owned exclusively by the **Identity & Card Core** module; every other module ref
 
 - **Person** — canonical record of a real human (distinct from login/auth identity).
 - **Account** — an authentication identity (email+password, SSO, OAuth), many-to-one with Person (a person may have multiple login methods).
-- **Organization** — a company/team entity.
+- **Organization** — a company/team entity, **tenant-scoped**: it models a customer of the platform, with its own `tenantId` and brand configuration.
+- **CompanyProfile** — a **global, tenant-less** firmographic reference record (name, domain, industry, size band). Deliberately *not* the same thing as an Organization: a `CompanyProfile` is any company a user happens to have contacts at, whether or not it is a customer. An Organization may link to one by domain. It carries no person-identifying data, and is the corpus's only entity exempt from tenant isolation — see [ADR-0016](../adr/0016-public-company-directory-closed-people-graph.md).
 - **Membership** — Person↔Organization join with role, title, and date range.
 - **DigitalCard** — a presentable identity surface; a Person may hold multiple cards (e.g., "Sales card," "Personal card").
 

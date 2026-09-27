@@ -1,6 +1,6 @@
 # Product Philosophy: The Operating System for Professional Identity
 
-> Status: v0.1 · Owner: Product/Architecture · Last updated: 2026-06-30
+> Status: v0.2 · Owner: Product/Architecture · Last updated: 2026-09-27
 
 ## 1. Thesis
 
@@ -52,6 +52,8 @@ Each pillar is documented as a module with its own data, API, and UX surface, bu
 - **Automate the busywork, not the relationship.** Automation (see [`01-architecture/03-automation-workflow-engine.md`](../01-architecture/03-automation-workflow-engine.md)) handles enrichment, reminders, and drafts; it never sends on a human's behalf without an explicit trust boundary the user configures.
 - **Own your identity.** Data portability and export are first-class, not a retention tactic — this is both a trust requirement and, pragmatically, the only way to win users away from incumbents who lock data in.
 - **Never lock into today's technology.** Every architectural decision in this corpus names alternatives, a recommendation, and an explicit extension point or migration trigger (see [`01-architecture/08-tech-stack-options-matrix.md`](../01-architecture/08-tech-stack-options-matrix.md)).
+- **Mobile-first, surface-honest.** The phone is where the product's signature interaction happens — a card shared in front of another human — so capture and share are designed for the phone first and must be complete there. But mobile-first is not mobile-only: admin, pipeline, and bulk work are honestly desktop-shaped rather than cramped onto a screen that cannot hold them (see [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) §5 and [ADR-0014](../adr/0014-desktop-strategy-responsive-web.md)).
+- **Offline-first where the moment demands it.** The moments that define this product — capturing a contact, sharing a card, checking in at an event — happen in conference halls and basements with no signal, so they must work offline and reconcile afterwards; at-desk workflows carry no such obligation, and pretending otherwise would buy complexity nobody needs (see [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) §5 and [ADR-0010](../adr/0010-offline-first-sync-protocol.md)).
 
 ## 5. What "Done" Looks Like for v1
 
