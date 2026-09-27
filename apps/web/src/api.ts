@@ -1,7 +1,10 @@
 import type {
+  Company,
   Contact,
   ContactDetail,
   FieldRequest,
+  MyCompany,
+  OrgTree,
   FieldType,
   FieldVisibility,
   InteractionChannel,
@@ -195,6 +198,38 @@ export async function logInteraction(
     method: "POST",
     headers: { "Content-Type": "application/json", "x-edit-token": editToken },
     body: JSON.stringify({ channel, summary, occurredAt }),
+  });
+  return handle(res);
+}
+
+export async function listMyCompanies(editToken: string): Promise<MyCompany[]> {
+  const res = await fetch("/api/companies/mine", { headers: { "x-edit-token": editToken } });
+  return handle(res);
+}
+
+export async function searchCompanies(editToken: string, q: string): Promise<Company[]> {
+  const res = await fetch(`/api/companies?q=${encodeURIComponent(q)}`, {
+    headers: { "x-edit-token": editToken },
+  });
+  return handle(res);
+}
+
+export async function getOrgTree(companyId: string, editToken: string): Promise<OrgTree> {
+  const res = await fetch(`/api/companies/${companyId}/tree`, {
+    headers: { "x-edit-token": editToken },
+  });
+  return handle(res);
+}
+
+export async function updateContact(
+  contactId: string,
+  editToken: string,
+  patch: { companyProfileId?: string | null; reportsToContactId?: string | null },
+): Promise<{ id: string; companyProfileId: string | null; reportsToContactId: string | null }> {
+  const res = await fetch(`/api/contacts/${contactId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", "x-edit-token": editToken },
+    body: JSON.stringify(patch),
   });
   return handle(res);
 }

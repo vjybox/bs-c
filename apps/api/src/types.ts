@@ -60,7 +60,27 @@ export interface ContactRow {
   unmatched_profile: Record<string, unknown> | null;
   capture_source: CaptureSource;
   capture_context: string | null;
+  company_profile_id: string | null;
+  reports_to_contact_id: string | null;
   created_at: string;
+}
+
+/** 'derived' is deterministic extraction (an email domain); 'ai' is reserved, not yet used. */
+export type EnrichmentSource = "derived" | "manual" | "ai" | "claimed";
+export type SizeBand = "1-10" | "11-50" | "51-200" | "201-1000" | "1000+";
+
+/** Global and tenant-less by design (ADR-0016). Must never gain a person-identifying field. */
+export interface CompanyProfileRow {
+  id: string;
+  name: string;
+  domain: string | null;
+  industry: string | null;
+  size_band: SizeBand | null;
+  logo_ref: string | null;
+  enrichment_source: EnrichmentSource;
+  verification_status: "unverified" | "verified";
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ConnectionRow {

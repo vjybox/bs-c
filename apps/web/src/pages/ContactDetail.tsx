@@ -92,6 +92,16 @@ export default function ContactDetailPage() {
       <Link to="/contacts">← My Contacts</Link>
       <h1>{contact.subject?.displayName ?? "(unknown)"}</h1>
       {contact.subject?.headline && <p className="contact-headline">{contact.subject.headline}</p>}
+      {contact.company && (
+        <p className="contact-company">
+          <Link to={`/companies/${contact.company.id}`}>{contact.company.name}</Link>
+          {contact.company.enrichmentSource === "derived" && (
+            <span className="inferred-badge" title="Derived from an email domain">
+              inferred
+            </span>
+          )}
+        </p>
+      )}
       {contact.captureContext && (
         <p className="contact-context">Met: {contact.captureContext}</p>
       )}

@@ -10,6 +10,8 @@ The product needs a public directory of companies — enriched by AI or entered 
 
 Split the boundary **by data kind**. Introduce **`CompanyProfile`** — a global, tenant-less record carrying firmographic data only (`name`, `domain`, `industry`, `sizeBand`, `logoRef`, `enrichmentSource`, `verificationStatus`). People discovery and org-tree placement stay inside the owner's own graph: a tree is composed solely of the owner's own `Contact` rows, via `Contact.companyProfileId` and a private `Contact.reportsToContactId` edge. This is a named exception to ADR-0001, scoped strictly to non-person data.
 
+`enrichmentSource` is one of `derived` (deterministic extraction, e.g. a company inferred from an email domain), `ai` (model-backed, reserved and not yet implemented), `claimed`, or `manual`. The shipped implementation produces only `derived` and `manual`; nothing is labelled `ai` until real model enrichment exists.
+
 ## Alternatives Considered
 
 - **Widen `Organization` to be global**: conflates customer-tenant with directory-company and drags `tenantId`/`brandConfig` into a public record.

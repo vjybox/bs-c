@@ -108,6 +108,7 @@ export default function Editor() {
         <div className="editor-toolbar-actions">
           <Link to="/editor/requests">Field requests</Link>
           <Link to="/contacts">My Contacts</Link>
+        <Link to="/companies">Companies</Link>
           <button type="button" onClick={() => setShowShare(true)} className="primary-btn">
             Share
           </button>

@@ -3,6 +3,7 @@
 // has people in it.
 import type { PoolClient } from "pg";
 import { pool, recomputeConnectionStrength } from "./db.js";
+import { deriveCompanyForPerson } from "./company-derivation.js";
 import type { FieldType, FieldVisibility, InteractionChannel } from "./types.js";
 
 const DAY_MS = 86_400_000;
@@ -96,6 +97,35 @@ const PEOPLE: SeedPerson[] = [
       { fieldType: "phone", label: "Mobile", value: "+49 170 9876 543", visibility: "request_required" },
     ],
   },
+  // Two more at Devon's domain, so one company has a real hierarchy to look at rather
+  // than a single lonely node.
+  {
+    key: "noor",
+    displayName: "Noor Haddad",
+    headline: "VP Sales, Northwind Cloud",
+    editToken: "demo-noor-token",
+    fields: [
+      { fieldType: "email", label: "Work email", value: "noor.haddad@northwind.cloud", visibility: "public" },
+      { fieldType: "text", label: "Title", value: "VP Sales, EMEA", visibility: "public" },
+      { fieldType: "phone", label: "Mobile", value: "+1 415 555 0177", visibility: "request_required" },
+    ],
+  },
+  {
+    key: "tomas",
+    displayName: "Tomas Vega",
+    headline: "Sales Development Rep, Northwind Cloud",
+    editToken: "demo-tomas-token",
+    fields: [
+      { fieldType: "email", label: "Work email", value: "tomas.vega@northwind.cloud", visibility: "public" },
+      { fieldType: "url", label: "Calendar", value: "https://cal.com/tomasvega", visibility: "link_only" },
+    ],
+  },
+];
+
+/** Mara's private view of who reports to whom at Northwind, as owner -> subject pairs. */
+const REPORTING_LINES: Array<{ ownerKey: string; subjectKey: string; managerKey: string }> = [
+  { ownerKey: "mara", subjectKey: "devon", managerKey: "noor" },
+  { ownerKey: "mara", subjectKey: "tomas", managerKey: "devon" },
 ];
 
 interface InsertedPerson {
@@ -199,6 +229,24 @@ const RELATIONSHIPS: SeedRelationship[] = [
   },
   {
     ownerKey: "mara",
+    subjectKey: "noor",
+    captureContext: "Introduced by Devon — Northwind budget holder",
+    interactions: [
+      { daysAgo: 40, channel: "note", summary: "Saved contact from shared card", loggedByKey: "mara" },
+      { daysAgo: 21, channel: "meeting", summary: "Scoping call for the rebrand budget", loggedByKey: "mara" },
+    ],
+  },
+  {
+    ownerKey: "mara",
+    subjectKey: "tomas",
+    captureContext: "SaaStr Annual 2026 — Northwind booth",
+    interactions: [
+      { daysAgo: 85, channel: "note", summary: "Saved contact from shared card", loggedByKey: "mara" },
+      { daysAgo: 34, channel: "message", summary: "Sent him the case study he asked for", loggedByKey: "mara" },
+    ],
+  },
+  {
+    ownerKey: "mara",
     subjectKey: "lena",
     captureContext: "Berlin design meetup, 2025",
     alsoReverse: true,
@@ -258,22 +306,45 @@ async function seed(client: PoolClient): Promise<void> {
     [approvedSession.rows[0].id, personalEmailId, daysAgo(20), daysAgo(19)],
   );
 
+  // Keyed "owner->subject" so reporting lines can be attached once every contact exists.
+  const contactIds = new Map<string, string>();
+
   for (const rel of RELATIONSHIPS) {
     const owner = inserted.get(rel.ownerKey)!;
     const subject = inserted.get(rel.subjectKey)!;
 
-    await client.query(
-      `INSERT INTO contact (owner_person_id, subject_person_id, capture_source, capture_context, created_at)
-       VALUES ($1, $2, 'card_share', $3, $4)`,
-      [owner.personId, subject.personId, rel.captureContext, daysAgo(rel.interactions[0].daysAgo)],
+    // Same derivation the API performs on a real capture, so seeded and live data agree.
+    const subjectCompanyId = await deriveCompanyForPerson(client, subject.personId);
+    const ownerCompanyId = await deriveCompanyForPerson(client, owner.personId);
+
+    const contactRes = await client.query<{ id: string }>(
+      `INSERT INTO contact (owner_person_id, subject_person_id, capture_source, capture_context, company_profile_id, created_at)
+       VALUES ($1, $2, 'card_share', $3, $4, $5)
+       RETURNING id`,
+      [
+        owner.personId,
+        subject.personId,
+        rel.captureContext,
+        subjectCompanyId,
+        daysAgo(rel.interactions[0].daysAgo),
+      ],
     );
+    contactIds.set(`${rel.ownerKey}->${rel.subjectKey}`, contactRes.rows[0].id);
 
     if (rel.alsoReverse) {
-      await client.query(
-        `INSERT INTO contact (owner_person_id, subject_person_id, capture_source, capture_context, created_at)
-         VALUES ($1, $2, 'card_share', $3, $4)`,
-        [subject.personId, owner.personId, rel.captureContext, daysAgo(rel.interactions[0].daysAgo)],
+      const reverseRes = await client.query<{ id: string }>(
+        `INSERT INTO contact (owner_person_id, subject_person_id, capture_source, capture_context, company_profile_id, created_at)
+         VALUES ($1, $2, 'card_share', $3, $4, $5)
+         RETURNING id`,
+        [
+          subject.personId,
+          owner.personId,
+          rel.captureContext,
+          ownerCompanyId,
+          daysAgo(rel.interactions[0].daysAgo),
+        ],
       );
+      contactIds.set(`${rel.subjectKey}->${rel.ownerKey}`, reverseRes.rows[0].id);
     }
 
     // Same ordering rule the contacts route enforces, so the unique pair constraint holds.
@@ -307,6 +378,31 @@ async function seed(client: PoolClient): Promise<void> {
     `UPDATE connection c
         SET last_interaction_at = (SELECT max(occurred_at) FROM interaction WHERE connection_id = c.id)`,
   );
+
+  // Two companies get corrected by "a human", the rest stay as the crude domain-derived
+  // guess — so the demo shows both states and the inferred badge has something to mark.
+  const CORRECTED = [
+    { domain: "northwind.cloud", name: "Northwind Cloud", industry: "Cloud infrastructure", sizeBand: "201-1000" },
+    { domain: "meridianhealth.org", name: "Meridian Health", industry: "Healthcare", sizeBand: "1000+" },
+  ];
+  for (const c of CORRECTED) {
+    await client.query(
+      `UPDATE company_profile
+          SET name = $2, industry = $3, size_band = $4, enrichment_source = 'manual', updated_at = now()
+        WHERE domain = $1`,
+      [c.domain, c.name, c.industry, c.sizeBand],
+    );
+  }
+
+  for (const line of REPORTING_LINES) {
+    const contactId = contactIds.get(`${line.ownerKey}->${line.subjectKey}`);
+    const managerId = contactIds.get(`${line.ownerKey}->${line.managerKey}`);
+    if (!contactId || !managerId) continue;
+    await client.query("UPDATE contact SET reports_to_contact_id = $2 WHERE id = $1", [
+      contactId,
+      managerId,
+    ]);
+  }
 }
 
 async function main(): Promise<void> {

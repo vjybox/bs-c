@@ -2,6 +2,15 @@
 
 All notable changes to this documentation corpus are recorded here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project does not ship versioned software releases — "versions" below refer to milestones in the design corpus itself, governed by git history (no document is ever overwritten in place; revisions land as new commits, and superseded content is marked rather than deleted).
 
+## [0.2.1] - 2026-09-27
+
+### Changed
+
+- **`enrichmentSource` is now described accurately.** Rulebook §9.5 and ADR-0016 named `ai` as the value for automatic enrichment, but the Company Directory as built derives companies by extracting the domain from a subject's public email field — deterministic, not model-backed. Both documents now define the full set (`derived` / `ai` / `claimed` / `manual`) and state plainly that only `derived` and `manual` are produced today. Labelling deterministic extraction as AI would have put a false claim in front of users, since the UI shows this value as an "inferred" badge.
+- **`TODO.md`** records that the Company Directory is implemented (rulebook 9.1–9.6 covered by tests), that Events remains designed-but-unbuilt, and that no AI enrichment exists.
+
+This entry documents design-corpus changes only; the implementation lives in `apps/`.
+
 ## [0.2.0] - 2026-09-27
 
 ### Added

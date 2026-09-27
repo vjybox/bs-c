@@ -124,3 +124,52 @@ export const connectionIdParamsSchema = {
   required: ["connectionId"],
   properties: { connectionId: uuidSchema },
 };
+
+export const companyIdParamsSchema = {
+  type: "object",
+  required: ["companyId"],
+  properties: { companyId: uuidSchema },
+};
+
+const sizeBandSchema = { type: "string", enum: ["1-10", "11-50", "51-200", "201-1000", "1000+"] };
+
+export const createCompanyBodySchema = {
+  type: "object",
+  required: ["name"],
+  additionalProperties: false,
+  properties: {
+    name: { type: "string", minLength: 1, maxLength: 200 },
+    domain: { type: "string", maxLength: 253 },
+    industry: { type: "string", maxLength: 100 },
+    sizeBand: sizeBandSchema,
+  },
+};
+
+export const updateCompanyBodySchema = {
+  type: "object",
+  additionalProperties: false,
+  minProperties: 1,
+  properties: {
+    name: { type: "string", minLength: 1, maxLength: 200 },
+    domain: { type: "string", maxLength: 253 },
+    industry: { type: "string", maxLength: 100 },
+    sizeBand: sizeBandSchema,
+  },
+};
+
+export const companySearchQuerySchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: { q: { type: "string", maxLength: 200 } },
+};
+
+/** Both fields are nullable so the UI can clear a company or a reporting line. */
+export const patchContactBodySchema = {
+  type: "object",
+  additionalProperties: false,
+  minProperties: 1,
+  properties: {
+    companyProfileId: { type: ["string", "null"], format: "uuid" },
+    reportsToContactId: { type: ["string", "null"], format: "uuid" },
+  },
+};

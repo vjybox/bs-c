@@ -65,11 +65,50 @@ export interface Interaction {
   loggedByPersonId: string;
 }
 
+export type EnrichmentSource = "derived" | "manual" | "ai" | "claimed";
+
+/** Global firmographic reference data. Carries no person-identifying fields by design. */
+export interface Company {
+  id: string;
+  name: string;
+  domain: string | null;
+  industry: string | null;
+  sizeBand: string | null;
+  logoRef: string | null;
+  enrichmentSource: EnrichmentSource;
+  verificationStatus: "unverified" | "verified";
+  updatedAt: string;
+}
+
+export interface MyCompany extends Company {
+  contactCount: number;
+}
+
+export interface ContactCompanyRef {
+  id: string;
+  name: string;
+  enrichmentSource: EnrichmentSource;
+}
+
+export interface OrgTreeNode {
+  contactId: string;
+  subject: { displayName: string; headline: string | null } | null;
+  captureContext: string | null;
+  reports: OrgTreeNode[];
+}
+
+export interface OrgTree {
+  company: Company;
+  roots: OrgTreeNode[];
+}
+
 export interface Contact {
   id: string;
   subject: { displayName: string; headline: string | null } | null;
   captureSource: "card_share" | "manual";
   captureContext: string | null;
+  company: ContactCompanyRef | null;
+  reportsToContactId: string | null;
   connectionId: string | null;
   connectionStrength: number | null;
   lastInteractionAt: string | null;

@@ -6,9 +6,13 @@
 // than a re-derivation of it. Writes are simulated in memory and vanish on reload.
 import fixturesJson from "./demo-fixtures.json";
 import type {
+  Company,
   Contact,
   ContactDetail,
   FieldRequest,
+  MyCompany,
+  OrgTree,
+  OrgTreeNode,
   FieldType,
   FieldVisibility,
   Interaction,
@@ -60,6 +64,8 @@ interface PersonaState {
   contactDetails: Record<string, ContactDetail>;
   fieldRequests: FieldRequest[];
   reconnectionSuggestions: ReconnectionSuggestion[];
+  companies?: MyCompany[];
+  trees?: Record<string, OrgTree>;
   shareSessionId: string;
   shareExpiresAt: string;
 }
@@ -258,6 +264,8 @@ export async function saveContact(
     subject: view ? { displayName: view.person.displayName, headline: view.person.headline } : null,
     captureSource: "card_share",
     captureContext: captureContext ?? null,
+    company: null,
+    reportsToContactId: null,
     connectionId,
     connectionStrength: 0.25,
     lastInteractionAt: now,
@@ -339,4 +347,84 @@ export async function getReconnectionSuggestions(
   editToken: string,
 ): Promise<ReconnectionSuggestion[]> {
   return detach(persona(editToken).reconnectionSuggestions);
+}
+
+export async function listMyCompanies(editToken: string): Promise<MyCompany[]> {
+  return detach(persona(editToken).companies ?? []);
+}
+
+export async function searchCompanies(_editToken: string, q: string): Promise<Company[]> {
+  // The directory is global, so search spans every persona's companies, not just yours.
+  const all = new Map<string, Company>();
+  for (const p of Object.values(state.byToken)) {
+    for (const c of p.companies ?? []) all.set(c.id, c);
+  }
+  const needle = q.trim().toLowerCase();
+  const matches = [...all.values()].filter(
+    (c) => !needle || c.name.toLowerCase().includes(needle) || (c.domain ?? "").includes(needle),
+  );
+  return detach(matches.slice(0, 20));
+}
+
+export async function getOrgTree(companyId: string, editToken: string): Promise<OrgTree> {
+  const tree = persona(editToken).trees?.[companyId];
+  if (tree) return detach(tree);
+
+  // No captured contacts at this company is a valid answer, not an error (rulebook 9.4).
+  const company = (persona(editToken).companies ?? []).find((c) => c.id === companyId);
+  if (!company) throw new Error("Company not found");
+  return detach({ company, roots: [] });
+}
+
+export async function updateContact(
+  contactId: string,
+  editToken: string,
+  patch: { companyProfileId?: string | null; reportsToContactId?: string | null },
+): Promise<{ id: string; companyProfileId: string | null; reportsToContactId: string | null }> {
+  const p = persona(editToken);
+  const detail = p.contactDetails[contactId];
+  if (!detail) throw new Error("Contact not found");
+
+  if (patch.reportsToContactId !== undefined) {
+    if (patch.reportsToContactId === contactId) {
+      throw new Error("A contact cannot report to itself");
+    }
+    detail.reportsToContactId = patch.reportsToContactId;
+    const listed = p.contacts.find((c) => c.id === contactId);
+    if (listed) listed.reportsToContactId = patch.reportsToContactId;
+    rebuildTrees(p);
+  }
+
+  return {
+    id: contactId,
+    companyProfileId: detail.company?.id ?? null,
+    reportsToContactId: detail.reportsToContactId,
+  };
+}
+
+/** Recomputes every tree from the persona's own contacts after a reporting line changes. */
+function rebuildTrees(p: PersonaState): void {
+  if (!p.trees) return;
+  for (const [companyId, tree] of Object.entries(p.trees)) {
+    const members = p.contacts.filter((c) => c.company?.id === companyId);
+    const nodes = new Map<string, OrgTreeNode>(
+      members.map((c) => [
+        c.id,
+        {
+          contactId: c.id,
+          subject: c.subject,
+          captureContext: c.captureContext,
+          reports: [] as OrgTreeNode[],
+        },
+      ]),
+    );
+    const roots: OrgTreeNode[] = [];
+    for (const c of members) {
+      const node = nodes.get(c.id)!;
+      const parent = c.reportsToContactId ? nodes.get(c.reportsToContactId) : undefined;
+      if (parent) parent.reports.push(node);
+      else roots.push(node);
+    }
+    tree.roots = roots;
+  }
 }

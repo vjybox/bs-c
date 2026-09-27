@@ -362,3 +362,57 @@ button {
 .demo-banner strong {
   color: #fffbeb;
 }
+
+/* Company directory and org trees. */
+
+.contact-company {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inferred-badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
+
+.org-tree,
+.org-branch {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Indent and rule each level so depth is readable without drawing connectors. */
+.org-branch {
+  margin: 8px 0 0 20px;
+  padding-left: 16px;
+  border-left: 2px solid #e5e7eb;
+}
+
+.org-node-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  background: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.org-manager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 0.8rem;
+}

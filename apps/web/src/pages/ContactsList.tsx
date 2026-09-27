@@ -48,6 +48,16 @@ export default function ContactsList() {
               {c.subject?.headline && (
                 <span className="contact-headline">{c.subject.headline}</span>
               )}
+              {c.company && (
+                <span className="contact-company">
+                  <Link to={`/companies/${c.company.id}`}>{c.company.name}</Link>
+                  {c.company.enrichmentSource === "derived" && (
+                    <span className="inferred-badge" title="Derived from an email domain">
+                      inferred
+                    </span>
+                  )}
+                </span>
+              )}
               {c.captureContext && (
                 <span className="contact-context">{c.captureContext}</span>
               )}
