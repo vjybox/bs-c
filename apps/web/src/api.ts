@@ -15,6 +15,8 @@ import type {
   ReconnectionSuggestion,
 } from "./types";
 
+import { enqueue } from "./offline-queue";
+
 const STORAGE_CARD_ID = "digitalIdentity.cardId";
 const STORAGE_EDIT_TOKEN = "digitalIdentity.editToken";
 
@@ -33,6 +35,50 @@ export function setStoredAuth(cardId: string, editToken: string) {
 export function clearStoredAuth() {
   localStorage.removeItem(STORAGE_CARD_ID);
   localStorage.removeItem(STORAGE_EDIT_TOKEN);
+}
+
+/**
+ * Posts, or queues the write if there is no network and replays it later.
+ *
+ * Rulebook §4.3: a journey must queue the user's intent rather than refuse the action.
+ * The caller gets an optimistic result with a `pending-` id; the real row is created on
+ * replay and appears on the next load. Only used for the writes §5.6 names as
+ * offline-required — everything else still fails loudly.
+ */
+async function postOrQueue<T>(
+  url: string,
+  editToken: string,
+  body: unknown,
+  optimistic: (requestId: string) => T,
+  label: string,
+): Promise<T> {
+  const requestId = crypto.randomUUID();
+  const payload = JSON.stringify(body);
+
+  const queueIt = async () => {
+    await enqueue({ url, method: "POST", body: payload, editToken, requestId, label });
+    return optimistic(requestId);
+  };
+
+  if (!navigator.onLine) return queueIt();
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-edit-token": editToken,
+        "x-request-id": requestId,
+      },
+      body: payload,
+    });
+    // A 5xx is the server being unwell, not the request being wrong — worth retrying.
+    if (res.status >= 500) return queueIt();
+    return handle<T>(res);
+  } catch {
+    // Fetch throws on a dropped connection even when the browser still thinks it is online.
+    return queueIt();
+  }
 }
 
 async function handle<T>(res: Response): Promise<T> {
@@ -161,12 +207,13 @@ export async function saveContact(
   editToken: string,
   captureContext?: string,
 ): Promise<{ id: string; connectionId: string }> {
-  const res = await fetch("/api/contacts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-edit-token": editToken },
-    body: JSON.stringify({ shareSessionId, captureSource: "card_share", captureContext }),
-  });
-  return handle(res);
+  return postOrQueue(
+    "/api/contacts",
+    editToken,
+    { shareSessionId, captureSource: "card_share", captureContext },
+    (requestId) => ({ id: `pending-${requestId}`, connectionId: `pending-${requestId}` }),
+    "Save contact",
+  );
 }
 
 export async function listContacts(editToken: string): Promise<Contact[]> {
@@ -194,12 +241,20 @@ export async function logInteraction(
   occurredAt: string;
   loggedByPersonId: string;
 }> {
-  const res = await fetch(`/api/connections/${connectionId}/interactions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-edit-token": editToken },
-    body: JSON.stringify({ channel, summary, occurredAt }),
-  });
-  return handle(res);
+  const when = occurredAt ?? new Date().toISOString();
+  return postOrQueue(
+    `/api/connections/${connectionId}/interactions`,
+    editToken,
+    { channel, summary, occurredAt: when },
+    (requestId) => ({
+      id: `pending-${requestId}`,
+      channel,
+      summary: summary ?? null,
+      occurredAt: when,
+      loggedByPersonId: "",
+    }),
+    "Log interaction",
+  );
 }
 
 export async function listMyCompanies(editToken: string): Promise<MyCompany[]> {

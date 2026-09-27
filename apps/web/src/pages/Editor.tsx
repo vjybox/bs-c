@@ -186,8 +186,14 @@ export default function Editor() {
         </div>
       </div>
 
-      {showShare && card ? (
-        <ShareSheet cardId={card.id} editToken={auth.editToken} onClose={() => setShowShare(false)} />
+      {showShare && card && person ? (
+        <ShareSheet
+          cardId={card.id}
+          editToken={auth.editToken}
+          person={person}
+          card={card}
+          onClose={() => setShowShare(false)}
+        />
       ) : null}
     </div>
   );

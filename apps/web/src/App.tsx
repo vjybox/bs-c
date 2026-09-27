@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import ConnectionBanner from "./components/ConnectionBanner";
 import CreateCard from "./pages/CreateCard";
 import Editor from "./pages/Editor";
 import Requests from "./pages/Requests";
@@ -11,6 +12,8 @@ import CompanyTree from "./pages/CompanyTree";
 
 export default function App() {
   return (
+    <>
+    <ConnectionBanner />
     <Routes>
       <Route path="/" element={<CreateCard />} />
       <Route path="/editor" element={<Editor />} />
@@ -22,5 +25,6 @@ export default function App() {
       <Route path="/companies/:companyId" element={<CompanyTree />} />
       <Route path="/demo" element={<Demo />} />
     </Routes>
+    </>
   );
 }

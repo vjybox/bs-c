@@ -111,6 +111,40 @@ plus `tsc` and Vite — in which case build the images on a desktop and load the
    The web app proxies `/api/*` to `http://localhost:4000` (see `apps/web/vite.config.ts`).
    Open `http://localhost:5173`.
 
+## Offline behaviour
+
+The web app is an installable PWA and the capture moment works with no network, which is the
+point: the flows that matter happen in conference halls and basements.
+
+- **Service worker** (`apps/web/public/sw.js`) — hand-rolled runtime caching, no build plugin.
+  Cache-first for content-hashed assets, network-first for `GET /api` so already-synced records
+  stay readable; a cache-served response carries `x-from-cache` so the UI can mark it stale.
+  Registered only in a production, non-demo build — artifacts do not support service workers,
+  and registering in dev fights HMR.
+- **Offline write queue** (`apps/web/src/offline-queue.ts`) — saving a contact and logging an
+  interaction queue in IndexedDB when there is no network and replay on reconnect, oldest first
+  so ordering holds. IndexedDB rather than memory so a capture survives the app being closed.
+  A 4xx is dropped rather than retried forever; only network errors and 5xx are requeued.
+  Card editing is at-desk work and is deliberately *not* queued — it fails loudly.
+- **Offline share** — when a scoped session cannot be created, the QR falls back to a vCard
+  containing **public fields only**, which scans with no network on either phone. This is a
+  stated exception in rulebook §6.7: a public field is already unrestricted, so a copy bypasses
+  no gate and forfeits no revocation. Gated fields never appear in an offline payload, and
+  `apps/web/src/vcard.test.ts` enforces that directly. The UI names which form it handed over.
+- **Connectivity banner** — the visible staleness marker rulebook §5.6 requires, with the count
+  of writes still waiting to sync.
+
+To exercise it, build and preview rather than using the dev server (the service worker only
+registers in a production build):
+
+```
+npm run build --workspace=apps/web
+npm run preview --workspace=apps/web    # http://localhost:4173
+```
+
+Then use your browser's offline toggle. `vite preview` proxies `/api` to port 4000 the same way
+the dev server does.
+
 ## Static demo build
 
 There is a second build mode that produces a fully standalone version of the web app with no

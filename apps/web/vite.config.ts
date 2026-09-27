@@ -40,5 +40,15 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    // `vite preview` does not inherit server.proxy, and the offline tests run against a
+    // real production build rather than the dev server.
+    preview: {
+      proxy: {
+        "/api": {
+          target: "http://localhost:4000",
+          changeOrigin: true,
+        },
+      },
+    },
   };
 });
