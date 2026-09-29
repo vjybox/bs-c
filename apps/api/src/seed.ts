@@ -2,7 +2,8 @@
 // `seed` service in docker-compose.yml. Idempotent: exits 0 if the database already
 // has people in it.
 import type { PoolClient } from "pg";
-import { pool, recomputeConnectionStrength } from "./db.js";
+import { pool, recomputeContactStrength } from "./db.js";
+import { runMigrations } from "./migrate.js";
 import { deriveCompanyForPerson } from "./company-derivation.js";
 import type { FieldType, FieldVisibility, InteractionChannel } from "./types.js";
 
@@ -215,7 +216,7 @@ const RELATIONSHIPS: SeedRelationship[] = [
     interactions: [
       { daysAgo: 75, channel: "note", summary: "Saved contact from shared card", loggedByKey: "mara" },
       { daysAgo: 30, channel: "email", summary: "Sent the vendor security questionnaire back", loggedByKey: "mara" },
-      { daysAgo: 5, channel: "call", summary: "Clarified data residency questions", loggedByKey: "priya" },
+      { daysAgo: 5, channel: "call", summary: "Clarified data residency questions", loggedByKey: "mara" },
     ],
   },
   {
@@ -360,24 +361,28 @@ async function seed(client: PoolClient): Promise<void> {
     );
     const connectionId = connRes.rows[0].id;
 
+    // A note lives on its author's own contact row: Devon's note about Mara is on
+    // Devon->Mara and Mara never sees it. That is the privacy property the demo shows.
+    const touched = new Set<string>();
     for (const i of rel.interactions) {
+      const authorContactId = contactIds.get(
+        i.loggedByKey === rel.ownerKey
+          ? `${rel.ownerKey}->${rel.subjectKey}`
+          : `${rel.subjectKey}->${rel.ownerKey}`,
+      );
+      if (!authorContactId) {
+        throw new Error(`Seed: ${i.loggedByKey} logs "${i.summary}" but holds no contact for it`);
+      }
+      touched.add(authorContactId);
       await client.query(
-        `INSERT INTO interaction (connection_id, logged_by_person_id, channel, summary, occurred_at, created_at)
-         VALUES ($1, $2, $3, $4, $5, $5)`,
-        [connectionId, inserted.get(i.loggedByKey)!.personId, i.channel, i.summary, daysAgo(i.daysAgo)],
+        `INSERT INTO interaction (contact_id, connection_id, logged_by_person_id, channel, summary, occurred_at, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $6)`,
+        [authorContactId, connectionId, inserted.get(i.loggedByKey)!.personId, i.channel, i.summary, daysAgo(i.daysAgo)],
       );
     }
 
-    await recomputeConnectionStrength(client, connectionId);
+    for (const contactId of touched) await recomputeContactStrength(client, contactId);
   }
-
-  // recomputeConnectionStrength stamps last_interaction_at = now() unconditionally, which
-  // would erase the backdating above and leave reconnection suggestions empty. Restore the
-  // real values from the interaction history.
-  await client.query(
-    `UPDATE connection c
-        SET last_interaction_at = (SELECT max(occurred_at) FROM interaction WHERE connection_id = c.id)`,
-  );
 
   // Two companies get corrected by "a human", the rest stay as the crude domain-derived
   // guess — so the demo shows both states and the inferred badge has something to mark.
@@ -406,32 +411,8 @@ async function seed(client: PoolClient): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const schemaCheck = await pool.query<{ ok: boolean }>(
-    "SELECT to_regclass('public.person') IS NOT NULL AS ok",
-  );
-  if (!schemaCheck.rows[0].ok) {
-    console.error(
-      [
-        "Schema is missing — the database has no tables, so there is nothing to seed.",
-        "",
-        "Two things cause this:",
-        "",
-        "1. You started the stack with only docker-compose.yml, not the whole project folder.",
-        "   Compose bind-mounts ./apps/api/src/schema.sql into Postgres to create the tables.",
-        "   If that file isn't there, Docker silently creates an empty DIRECTORY in its place",
-        "   and Postgres starts up with nothing in it. Copy the entire project folder to the",
-        "   host and point your compose project at that folder, then: docker compose down -v",
-        "",
-        "2. The Postgres volume already existed from an earlier run. The schema is only applied",
-        "   the first time the volume is created, so a later schema change does nothing.",
-        "   Reset it with: docker compose down -v && docker compose up --build",
-        "",
-        "Both fixes delete the database volume. That is safe here — this stack holds only demo data.",
-      ].join("\n"),
-    );
-    process.exitCode = 1;
-    return;
-  }
+  // Same migrations the API runs at boot, so seeding works on an empty database too.
+  await runMigrations(pool, { log: (msg) => console.log(msg) });
 
   const existing = await pool.query("SELECT 1 FROM person LIMIT 1");
   if (existing.rowCount && existing.rowCount > 0) {

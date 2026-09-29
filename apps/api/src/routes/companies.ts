@@ -149,25 +149,11 @@ export default async function companiesRoutes(app: FastifyInstance) {
       const person = await requirePersonByToken(request, reply);
       if (!person) return;
 
-      const { name, industry, sizeBand } = request.body;
-      const domain = request.body.domain === undefined ? undefined : normalizeDomain(request.body.domain);
-
-      // A human correcting a value makes it authoritative: re-enrichment must not
-      // overwrite it afterwards (rulebook 9.5).
-      const result = await query<CompanyProfileRow>(
-        `UPDATE company_profile SET
-           name = coalesce($2, name),
-           domain = coalesce($3, domain),
-           industry = coalesce($4, industry),
-           size_band = coalesce($5, size_band),
-           enrichment_source = 'manual',
-           updated_at = now()
-         WHERE id = $1
-         RETURNING *`,
-        [request.params.companyId, name ?? null, domain ?? null, industry ?? null, sizeBand ?? null],
-      );
-      if (!result.rows[0]) return reply.code(404).send({ error: "Company not found" });
-      return reply.send(serializeCompany(result.rows[0]));
+      // Closed until edits are attributable. company_profile is global, so any signed-in
+      // person could rename a company for every tenant, and ADR-0016 forbids the
+      // person-identifying column that would record who did it. Corrections need a
+      // moderated path before this reopens.
+      return reply.code(403).send({ error: "Company details cannot be edited yet" });
     },
   );
 

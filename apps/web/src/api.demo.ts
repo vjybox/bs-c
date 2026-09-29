@@ -253,7 +253,7 @@ export async function saveContact(
   shareSessionId: string,
   editToken: string,
   captureContext?: string,
-): Promise<{ id: string; connectionId: string }> {
+): Promise<{ id: string }> {
   const p = persona(editToken);
   const view = state.shareSessions[shareSessionId];
   const id = uid();
@@ -284,7 +284,7 @@ export async function saveContact(
       },
     ],
   };
-  return { id, connectionId };
+  return { id };
 }
 
 export async function listContacts(editToken: string): Promise<Contact[]> {
@@ -305,7 +305,7 @@ function strengthFrom(interactions: Interaction[]): number {
 }
 
 export async function logInteraction(
-  connectionId: string,
+  contactId: string,
   editToken: string,
   channel: InteractionChannel,
   summary?: string,
@@ -318,8 +318,8 @@ export async function logInteraction(
   loggedByPersonId: string;
 }> {
   const p = persona(editToken);
-  const detail = Object.values(p.contactDetails).find((d) => d.connectionId === connectionId);
-  if (!detail) throw new Error("Connection not found");
+  const detail = p.contactDetails[contactId];
+  if (!detail) throw new Error("Contact not found");
 
   const interaction: Interaction = {
     id: uid(),

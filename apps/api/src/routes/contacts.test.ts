@@ -200,7 +200,7 @@ describe("GET /api/contacts/reconnection-suggestions", () => {
     const b = await createPerson("Bob");
     const c = await createPerson("Carol");
 
-    // Alice <-> Bob: stale connection (set last_interaction_at far in the past)
+    // Alice -> Bob: stale (Alice's own recency for Bob set far in the past)
     const sessionB = await createShareSession(b.cardId, b.editToken);
     await app.inject({
       method: "POST",
@@ -209,7 +209,7 @@ describe("GET /api/contacts/reconnection-suggestions", () => {
       payload: { shareSessionId: sessionB, captureSource: "card_share" },
     });
     await pool.query(
-      "UPDATE connection SET last_interaction_at = now() - interval '200 days' WHERE person_a_id = $1 OR person_b_id = $1",
+      "UPDATE contact SET last_interaction_at = now() - interval '200 days' WHERE subject_person_id = $1",
       [b.personId],
     );
 

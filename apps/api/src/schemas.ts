@@ -101,6 +101,8 @@ export const createContactBodySchema = {
   type: "object",
   additionalProperties: false,
   properties: {
+    // Client-generated so an offline capture replayed twice still creates one contact.
+    id: uuidSchema,
     shareSessionId: uuidSchema,
     subjectPersonId: uuidSchema,
     captureSource: { type: "string", enum: ["card_share", "manual"] },
@@ -113,16 +115,12 @@ export const logInteractionBodySchema = {
   required: ["channel"],
   additionalProperties: false,
   properties: {
+    // Client-generated idempotency key; see POST /api/contacts/:contactId/interactions.
+    id: uuidSchema,
     channel: { type: "string", enum: ["meeting", "call", "email", "message", "note"] },
     summary: { type: "string", maxLength: 2000 },
     occurredAt: { type: "string", format: "date-time" },
   },
-};
-
-export const connectionIdParamsSchema = {
-  type: "object",
-  required: ["connectionId"],
-  properties: { connectionId: uuidSchema },
 };
 
 export const companyIdParamsSchema = {

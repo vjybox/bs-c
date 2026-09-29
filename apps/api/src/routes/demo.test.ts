@@ -50,3 +50,37 @@ describe("GET /api/demo/personas", () => {
     await app.close();
   });
 });
+
+describe("seeded demo tokens", () => {
+  async function seededPerson() {
+    await pool.query(
+      "INSERT INTO person (display_name, edit_token) VALUES ('Mara Demo', 'demo-mara-token')",
+    );
+  }
+
+  it("are refused when DEMO_MODE is off, even if a demo seed once ran", async () => {
+    vi.stubEnv("DEMO_MODE", "");
+    await seededPerson();
+    const app = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/contacts",
+      headers: { "x-edit-token": "demo-mara-token" },
+    });
+    expect(res.statusCode).toBe(403);
+    await app.close();
+  });
+
+  it("work when DEMO_MODE is on", async () => {
+    vi.stubEnv("DEMO_MODE", "true");
+    await seededPerson();
+    const app = await buildApp();
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/contacts",
+      headers: { "x-edit-token": "demo-mara-token" },
+    });
+    expect(res.statusCode).toBe(200);
+    await app.close();
+  });
+});

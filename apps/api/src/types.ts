@@ -62,6 +62,8 @@ export interface ContactRow {
   capture_context: string | null;
   company_profile_id: string | null;
   reports_to_contact_id: string | null;
+  last_interaction_at: string | null;
+  strength: number;
   created_at: string;
 }
 
@@ -95,7 +97,8 @@ export interface ConnectionRow {
 
 export interface InteractionRow {
   id: string;
-  connection_id: string;
+  contact_id: string;
+  connection_id: string | null;
   logged_by_person_id: string;
   channel: InteractionChannel;
   summary: string | null;

@@ -1,7 +1,5 @@
--- Thin-slice schema for Identity & Card Core.
--- Mirrors the field names in docs/02-modules/identity-card-core/identity-card-core.md §7,
--- with Account/Organization/Membership/VerificationRecord intentionally omitted (see plan's
--- "What's Explicitly Out of Scope"). edit_token replaces real Account auth for this slice.
+-- Baseline: the schema as it stood before migrations existed. Never edit this file;
+-- add a new numbered migration instead (src/migrate.ts rejects a changed checksum).
 
 create extension if not exists pgcrypto;
 

@@ -310,3 +310,21 @@ describe("GET /api/companies — global firmographic search", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("PATCH /api/companies/:companyId", () => {
+  it("is closed: a global company cannot be renamed by an arbitrary signed-in person", async () => {
+    const bob = await createPerson("Bob");
+    const carol = await createPerson("Carol", "carol@northwind.cloud");
+    const contact = await saveContact(bob, carol);
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/api/companies/${contact.companyProfileId}`,
+      headers: { "x-edit-token": bob.editToken },
+      payload: { name: "Hijacked Inc" },
+    });
+    expect(res.statusCode).toBe(403);
+    const row = await pool.query("SELECT name FROM company_profile WHERE id = $1", [contact.companyProfileId]);
+    expect(row.rows[0].name).not.toBe("Hijacked Inc");
+  });
+});

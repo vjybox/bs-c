@@ -100,6 +100,25 @@ describe("POST /api/share-sessions/:sessionId/field-requests", () => {
   });
 });
 
+describe("field request race", () => {
+  it("concurrent duplicate requests yield exactly one row", async () => {
+    const { sessionId, requestableField } = await setupCardWithSession();
+    const fire = () =>
+      app.inject({
+        method: "POST",
+        url: `/api/share-sessions/${sessionId}/field-requests`,
+        payload: { fieldId: requestableField.id },
+      });
+    const results = await Promise.all(Array.from({ length: 20 }, fire));
+    expect(results.every((r) => r.statusCode === 200 || r.statusCode === 201)).toBe(true);
+    expect(new Set(results.map((r) => r.json().id)).size).toBe(1);
+    const rows = await pool.query("select count(*)::int as n from field_request where share_session_id = $1", [
+      sessionId,
+    ]);
+    expect(rows.rows[0].n).toBe(1);
+  });
+});
+
 describe("POST /api/field-requests/:id/respond", () => {
   it("approve flow appends the field to the session's visible set", async () => {
     const { sessionId, requestableField, editToken } = await setupCardWithSession();

@@ -2,15 +2,30 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { query } from "./db.js";
 import type { DigitalCardRow, FieldRequestRow, PersonRow, ShareSessionRow } from "./types.js";
 
-export async function requirePersonByToken(
-  request: FastifyRequest,
-  reply: FastifyReply,
-): Promise<PersonRow | null> {
+// The seed's fixed, committed tokens (demo-mara-token, ...). Real tokens are 24-char nanoids
+// and cannot match. Outside DEMO_MODE these are refused even if a demo seed once ran against
+// this database, so turning the flag off actually closes the demo identities.
+const SEED_TOKEN = /^demo-[a-z]+-token$/;
+
+function readToken(request: FastifyRequest, reply: FastifyReply): string | null {
   const token = request.headers["x-edit-token"];
   if (typeof token !== "string" || token.length === 0) {
     reply.code(401).send({ error: "Missing x-edit-token header" });
     return null;
   }
+  if (SEED_TOKEN.test(token) && process.env.DEMO_MODE !== "true") {
+    reply.code(403).send({ error: "Unknown edit token" });
+    return null;
+  }
+  return token;
+}
+
+export async function requirePersonByToken(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<PersonRow | null> {
+  const token = readToken(request, reply);
+  if (token === null) return null;
   const result = await query<PersonRow>("select * from person where edit_token = $1", [token]);
   const person = result.rows[0];
   if (!person) {
@@ -25,11 +40,8 @@ export async function requireCardOwner(
   reply: FastifyReply,
   cardId: string,
 ): Promise<{ person: PersonRow; card: DigitalCardRow } | null> {
-  const token = request.headers["x-edit-token"];
-  if (typeof token !== "string" || token.length === 0) {
-    reply.code(401).send({ error: "Missing x-edit-token header" });
-    return null;
-  }
+  const token = readToken(request, reply);
+  if (token === null) return null;
 
   const cardResult = await query<DigitalCardRow>(
     "select * from digital_card where id = $1",
@@ -59,11 +71,8 @@ export async function requireFieldRequestOwner(
   reply: FastifyReply,
   fieldRequestId: string,
 ): Promise<{ person: PersonRow; card: DigitalCardRow; shareSession: ShareSessionRow; fieldRequest: FieldRequestRow } | null> {
-  const token = request.headers["x-edit-token"];
-  if (typeof token !== "string" || token.length === 0) {
-    reply.code(401).send({ error: "Missing x-edit-token header" });
-    return null;
-  }
+  const token = readToken(request, reply);
+  if (token === null) return null;
 
   const requestResult = await query<FieldRequestRow>(
     "select * from field_request where id = $1",

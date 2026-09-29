@@ -6,3 +6,4 @@ dist-demo/
 *.tsbuildinfo
 test-results/
 playwright-report/
+backups/

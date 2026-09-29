@@ -14,23 +14,31 @@ export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(
   return pool.query<T>(text, params);
 }
 
-// Single source of truth for the strength formula, used both when an interaction
-// is logged directly and when a contact-save implicitly logs the first one.
-export async function recomputeConnectionStrength(
+// An idle client losing its connection (Postgres restart, network blip) emits 'error' on
+// the pool; unhandled, that would crash the process. The pool discards the client itself.
+pool.on("error", (err) => {
+  console.error("postgres pool error:", err.message);
+});
+
+// Single source of truth for the strength formula, used both when an interaction is logged
+// directly and when a contact-save implicitly logs the first one. Recency is the latest
+// interaction's own date — not the time of writing — so a back-dated or replayed offline
+// capture does not make an old relationship look fresh.
+export async function recomputeContactStrength(
   client: pg.Pool | pg.PoolClient,
-  connectionId: string,
-): Promise<{ strength: number; last_interaction_at: string }> {
-  const result = await client.query<{ strength: number; last_interaction_at: string }>(
-    `UPDATE connection SET
-       last_interaction_at = now(),
+  contactId: string,
+): Promise<{ strength: number; last_interaction_at: string | null }> {
+  const result = await client.query<{ strength: number; last_interaction_at: string | null }>(
+    `UPDATE contact SET
+       last_interaction_at = (SELECT max(occurred_at) FROM interaction WHERE contact_id = $1),
        strength = LEAST(1.0, 0.1 + (
          SELECT count(*) FROM interaction
-         WHERE connection_id = $1
+         WHERE contact_id = $1
            AND occurred_at > now() - interval '90 days'
        ) * 0.15)
      WHERE id = $1
      RETURNING strength, last_interaction_at`,
-    [connectionId],
+    [contactId],
   );
   return result.rows[0];
 }

@@ -41,19 +41,21 @@ export function clearStoredAuth() {
  * Posts, or queues the write if there is no network and replays it later.
  *
  * Rulebook §4.3: a journey must queue the user's intent rather than refuse the action.
- * The caller gets an optimistic result with a `pending-` id; the real row is created on
- * replay and appears on the next load. Only used for the writes §5.6 names as
+ * The request id doubles as the new row's id: the server inserts it idempotently, so a
+ * replay after a lost response creates nothing twice, and the optimistic result already
+ * carries the real id — a note can be queued against a contact that has not synced yet,
+ * because the queue replays oldest first. Only used for the writes §5.6 names as
  * offline-required — everything else still fails loudly.
  */
 async function postOrQueue<T>(
   url: string,
   editToken: string,
-  body: unknown,
+  body: (requestId: string) => unknown,
   optimistic: (requestId: string) => T,
   label: string,
 ): Promise<T> {
   const requestId = crypto.randomUUID();
-  const payload = JSON.stringify(body);
+  const payload = JSON.stringify(body(requestId));
 
   const queueIt = async () => {
     await enqueue({ url, method: "POST", body: payload, editToken, requestId, label });
@@ -206,12 +208,12 @@ export async function saveContact(
   shareSessionId: string,
   editToken: string,
   captureContext?: string,
-): Promise<{ id: string; connectionId: string }> {
+): Promise<{ id: string }> {
   return postOrQueue(
     "/api/contacts",
     editToken,
-    { shareSessionId, captureSource: "card_share", captureContext },
-    (requestId) => ({ id: `pending-${requestId}`, connectionId: `pending-${requestId}` }),
+    (id) => ({ id, shareSessionId, captureSource: "card_share", captureContext }),
+    (id) => ({ id }),
     "Save contact",
   );
 }
@@ -229,7 +231,7 @@ export async function getContact(contactId: string, editToken: string): Promise<
 }
 
 export async function logInteraction(
-  connectionId: string,
+  contactId: string,
   editToken: string,
   channel: InteractionChannel,
   summary?: string,
@@ -243,11 +245,11 @@ export async function logInteraction(
 }> {
   const when = occurredAt ?? new Date().toISOString();
   return postOrQueue(
-    `/api/connections/${connectionId}/interactions`,
+    `/api/contacts/${contactId}/interactions`,
     editToken,
-    { channel, summary, occurredAt: when },
-    (requestId) => ({
-      id: `pending-${requestId}`,
+    (id) => ({ id, channel, summary, occurredAt: when }),
+    (id) => ({
+      id,
       channel,
       summary: summary ?? null,
       occurredAt: when,

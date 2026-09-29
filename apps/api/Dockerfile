@@ -15,6 +15,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /repo/node_modules ./node_modules
 COPY --from=build /repo/apps/api/dist ./dist
+# Plain SQL, not compiled by tsc; migrate.ts resolves it as ../migrations from dist/.
+COPY --from=build /repo/apps/api/migrations ./migrations
 COPY --from=build /repo/apps/api/package.json ./package.json
 
 EXPOSE 4000

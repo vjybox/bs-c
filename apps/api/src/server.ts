@@ -1,4 +1,8 @@
 import { buildApp } from "./app.js";
+import { pool } from "./db.js";
+import { runMigrations } from "./migrate.js";
+
+await runMigrations(pool, { log: (msg) => console.log(msg) });
 
 const app = await buildApp();
 

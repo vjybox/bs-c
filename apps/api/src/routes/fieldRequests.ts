@@ -68,11 +68,22 @@ export default async function fieldRequestsRoutes(app: FastifyInstance) {
         return reply.send(serializeFieldRequest(existingResult.rows[0]));
       }
 
+      // Two concurrent requests both pass the check above; the unique index decides, and
+      // the loser returns the winner's row exactly as a later re-request would.
       const insertResult = await query<FieldRequestRow>(
         `insert into field_request (share_session_id, field_id)
-         values ($1, $2) returning *`,
+         values ($1, $2)
+         on conflict (share_session_id, field_id) do nothing
+         returning *`,
         [sessionId, fieldId],
       );
+      if (!insertResult.rows[0]) {
+        const winner = await query<FieldRequestRow>(
+          "select * from field_request where share_session_id = $1 and field_id = $2",
+          [sessionId, fieldId],
+        );
+        return reply.send(serializeFieldRequest(winner.rows[0]));
+      }
 
       reply.code(201).send(serializeFieldRequest(insertResult.rows[0]));
     },

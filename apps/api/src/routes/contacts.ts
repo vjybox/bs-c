@@ -1,10 +1,11 @@
 import type { FastifyInstance } from "fastify";
-import { pool, query, recomputeConnectionStrength } from "../db.js";
+import { pool, query, recomputeContactStrength } from "../db.js";
 import { requirePersonByToken } from "../auth.js";
 import type { ConnectionRow, ContactRow, InteractionRow, PersonRow } from "../types.js";
 import {
   contactIdParamsSchema,
   createContactBodySchema,
+  logInteractionBodySchema,
   patchContactBodySchema,
 } from "../schemas.js";
 import { deriveCompanyForPerson } from "../company-derivation.js";
@@ -63,6 +64,7 @@ async function wouldCreateCycle(
 }
 
 interface CreateContactBody {
+  id?: string;
   shareSessionId?: string;
   subjectPersonId?: string;
   captureSource?: "card_share" | "manual";
@@ -71,6 +73,13 @@ interface CreateContactBody {
 
 interface ContactIdParams {
   contactId: string;
+}
+
+interface LogInteractionBody {
+  id?: string;
+  channel: "meeting" | "call" | "email" | "message" | "note";
+  summary?: string;
+  occurredAt?: string;
 }
 
 function serializeContact(
@@ -91,8 +100,10 @@ function serializeContact(
       : null,
     reportsToContactId: contact.reports_to_contact_id,
     connectionId: connection?.id ?? null,
-    connectionStrength: connection?.strength ?? null,
-    lastInteractionAt: connection?.last_interaction_at ?? null,
+    // Per-contact, never the shared connection's: the other person's note-taking must not
+    // reorder this owner's list or change their suggestions.
+    connectionStrength: contact.strength,
+    lastInteractionAt: contact.last_interaction_at,
     createdAt: contact.created_at,
   };
 }
@@ -107,6 +118,23 @@ function serializeInteraction(row: InteractionRow) {
   };
 }
 
+async function createdContactResponse(contact: ContactRow) {
+  const conn = contact.subject_person_id
+    ? await query<{ id: string }>(
+        `SELECT id FROM connection
+          WHERE (person_a_id = $1 AND person_b_id = $2) OR (person_b_id = $1 AND person_a_id = $2)`,
+        [contact.owner_person_id, contact.subject_person_id],
+      )
+    : null;
+  return {
+    id: contact.id,
+    subjectPersonId: contact.subject_person_id,
+    connectionId: conn?.rows[0]?.id ?? null,
+    companyProfileId: contact.company_profile_id,
+    strength: contact.strength,
+  };
+}
+
 export default async function contactsRoutes(app: FastifyInstance) {
   // Must be registered before /:contactId to avoid route conflict.
   app.get("/api/contacts/reconnection-suggestions", async (request, reply) => {
@@ -114,37 +142,22 @@ export default async function contactsRoutes(app: FastifyInstance) {
     if (!person) return;
 
     const result = await query<{
-      connection_id: string;
       contact_id: string;
       display_name: string;
       headline: string | null;
       strength: number;
       last_interaction_at: string | null;
-      created_at: string;
     }>(
-      `SELECT
-         conn.id AS connection_id,
-         c.id AS contact_id,
-         p.display_name,
-         p.headline,
-         conn.strength,
-         conn.last_interaction_at,
-         conn.created_at
-       FROM connection conn
-       JOIN contact c
-         ON c.owner_person_id = $1
-        AND c.subject_person_id = CASE
-              WHEN conn.person_a_id = $1 THEN conn.person_b_id
-              ELSE conn.person_a_id
-            END
-       JOIN person p ON p.id = c.subject_person_id
-       WHERE (conn.person_a_id = $1 OR conn.person_b_id = $1)
-         AND (
-           conn.last_interaction_at < now() - interval '90 days'
-           OR (conn.last_interaction_at IS NULL AND conn.created_at < now() - interval '30 days')
-         )
-       ORDER BY conn.strength DESC
-       LIMIT 20`,
+      `SELECT c.id AS contact_id, p.display_name, p.headline, c.strength, c.last_interaction_at
+         FROM contact c
+         JOIN person p ON p.id = c.subject_person_id
+        WHERE c.owner_person_id = $1
+          AND (
+            c.last_interaction_at < now() - interval '90 days'
+            OR (c.last_interaction_at IS NULL AND c.created_at < now() - interval '30 days')
+          )
+        ORDER BY c.strength DESC
+        LIMIT 20`,
       [person.id],
     );
 
@@ -169,20 +182,35 @@ export default async function contactsRoutes(app: FastifyInstance) {
       const owner = await requirePersonByToken(request, reply);
       if (!owner) return;
 
-      const { shareSessionId, captureSource = "manual", captureContext } = request.body;
+      const { id: clientId, shareSessionId, captureSource = "manual", captureContext } = request.body;
       let { subjectPersonId } = request.body;
+
+      // A replayed offline capture: the first attempt already landed, so answer as if it
+      // had just succeeded rather than surfacing a duplicate the user never made.
+      if (clientId) {
+        const prior = await query<ContactRow>("SELECT * FROM contact WHERE id = $1", [clientId]);
+        if (prior.rows[0]) {
+          if (prior.rows[0].owner_person_id !== owner.id) {
+            return reply.code(409).send({ error: "Contact id already in use" });
+          }
+          return reply.code(200).send(await createdContactResponse(prior.rows[0]));
+        }
+      }
 
       if (!shareSessionId && !subjectPersonId) {
         return reply.code(400).send({ error: "shareSessionId or subjectPersonId is required" });
       }
 
       if (shareSessionId && !subjectPersonId) {
-        const sessionRes = await query<{ card_id: string }>(
-          "SELECT card_id FROM share_session WHERE id = $1",
+        const sessionRes = await query<{ card_id: string; expires_at: string }>(
+          "SELECT card_id, expires_at FROM share_session WHERE id = $1",
           [shareSessionId],
         );
         if (!sessionRes.rows[0]) {
           return reply.code(404).send({ error: "Share session not found" });
+        }
+        if (new Date(sessionRes.rows[0].expires_at).getTime() < Date.now()) {
+          return reply.code(410).send({ error: "This share link has expired" });
         }
         const cardRes = await query<{ person_id: string }>(
           "SELECT person_id FROM digital_card WHERE id = $1",
@@ -219,10 +247,10 @@ export default async function contactsRoutes(app: FastifyInstance) {
         const companyProfileId = await deriveCompanyForPerson(client, subjectPersonId);
 
         const contactRes = await client.query<ContactRow>(
-          `INSERT INTO contact (owner_person_id, subject_person_id, capture_source, capture_context, company_profile_id)
-           VALUES ($1, $2, $3, $4, $5)
+          `INSERT INTO contact (id, owner_person_id, subject_person_id, capture_source, capture_context, company_profile_id)
+           VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6)
            RETURNING *`,
-          [owner.id, subjectPersonId, captureSource, captureContext ?? null, companyProfileId],
+          [clientId ?? null, owner.id, subjectPersonId, captureSource, captureContext ?? null, companyProfileId],
         );
         const contact = contactRes.rows[0];
 
@@ -247,14 +275,14 @@ export default async function contactsRoutes(app: FastifyInstance) {
         const summary =
           captureSource === "card_share" ? "Contact saved via card share" : "Contact added manually";
         await client.query(
-          `INSERT INTO interaction (connection_id, logged_by_person_id, channel, summary)
-           VALUES ($1, $2, 'note', $3)`,
-          [connection.id, owner.id, summary],
+          `INSERT INTO interaction (contact_id, connection_id, logged_by_person_id, channel, summary)
+           VALUES ($1, $2, $3, 'note', $4)`,
+          [contact.id, connection.id, owner.id, summary],
         );
 
         // Recompute with the same formula used when logging interactions directly,
         // so strength never drifts between the two code paths.
-        const { strength } = await recomputeConnectionStrength(client, connection.id);
+        const { strength } = await recomputeContactStrength(client, contact.id);
 
         await client.query("COMMIT");
 
@@ -286,8 +314,6 @@ export default async function contactsRoutes(app: FastifyInstance) {
         display_name: string | null;
         p_headline: string | null;
         conn_id: string | null;
-        strength: number | null;
-        last_interaction_at: string | null;
         company_name: string | null;
         company_enrichment_source: string | null;
       }
@@ -297,8 +323,6 @@ export default async function contactsRoutes(app: FastifyInstance) {
          p.display_name,
          p.headline AS p_headline,
          conn.id AS conn_id,
-         conn.strength,
-         conn.last_interaction_at,
          cp.name AS company_name,
          cp.enrichment_source AS company_enrichment_source
        FROM contact c
@@ -308,7 +332,7 @@ export default async function contactsRoutes(app: FastifyInstance) {
          ON (conn.person_a_id = c.owner_person_id AND conn.person_b_id = c.subject_person_id)
          OR (conn.person_b_id = c.owner_person_id AND conn.person_a_id = c.subject_person_id)
        WHERE c.owner_person_id = $1
-       ORDER BY conn.last_interaction_at DESC NULLS LAST, c.created_at DESC`,
+       ORDER BY c.last_interaction_at DESC NULLS LAST, c.created_at DESC`,
       [person.id],
     );
 
@@ -372,12 +396,12 @@ export default async function contactsRoutes(app: FastifyInstance) {
         : null;
       const connection = connRes?.rows[0] ?? null;
 
-      const interactionsRes = connection
-        ? await query<InteractionRow>(
-            "SELECT * FROM interaction WHERE connection_id = $1 ORDER BY occurred_at DESC",
-            [connection.id],
-          )
-        : { rows: [] };
+      // By contact, never by connection: a connection is shared by both people, so reading
+      // through it returned the other person's private notes about the caller.
+      const interactionsRes = await query<InteractionRow>(
+        "SELECT * FROM interaction WHERE contact_id = $1 ORDER BY occurred_at DESC",
+        [contact.id],
+      );
 
       const companyRes = contact.company_profile_id
         ? await query<{ id: string; name: string; enrichment_source: string }>(
@@ -468,6 +492,80 @@ export default async function contactsRoutes(app: FastifyInstance) {
           id: row.id,
           companyProfileId: row.company_profile_id,
           reportsToContactId: row.reports_to_contact_id,
+        });
+      } catch (err) {
+        await client.query("ROLLBACK");
+        throw err;
+      } finally {
+        client.release();
+      }
+    },
+  );
+
+  app.post<{ Params: ContactIdParams; Body: LogInteractionBody }>(
+    "/api/contacts/:contactId/interactions",
+    { schema: { params: contactIdParamsSchema, body: logInteractionBodySchema } },
+    async (request, reply) => {
+      const person = await requirePersonByToken(request, reply);
+      if (!person) return;
+
+      const { contactId } = request.params;
+      const { id: clientId, channel, summary, occurredAt } = request.body;
+
+      const contactRes = await query<ContactRow>("SELECT * FROM contact WHERE id = $1", [contactId]);
+      const contact = contactRes.rows[0];
+      if (!contact) return reply.code(404).send({ error: "Contact not found" });
+      if (contact.owner_person_id !== person.id) {
+        return reply.code(403).send({ error: "Access denied" });
+      }
+
+      // A clock that runs ahead, or a typo, must not pin a contact to the top of the list
+      // indefinitely. Past dates are kept as given: back-dating is legitimate.
+      const now = new Date();
+      const requested = occurredAt ? new Date(occurredAt) : now;
+      const when = requested > now ? now : requested;
+
+      const connRes = contact.subject_person_id
+        ? await query<{ id: string }>(
+            `SELECT id FROM connection
+              WHERE (person_a_id = $1 AND person_b_id = $2) OR (person_b_id = $1 AND person_a_id = $2)`,
+            [person.id, contact.subject_person_id],
+          )
+        : null;
+
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        const inserted = await client.query<InteractionRow>(
+          `INSERT INTO interaction (id, contact_id, connection_id, logged_by_person_id, channel, summary, occurred_at)
+           VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (id) DO NOTHING
+           RETURNING *`,
+          [clientId ?? null, contactId, connRes?.rows[0]?.id ?? null, person.id, channel, summary ?? null, when],
+        );
+
+        let row = inserted.rows[0];
+        let status = 201;
+        if (!row) {
+          // Replay of an id that already landed. Only the same author on the same contact
+          // counts as a replay; anything else is a collision and must not reveal the row.
+          const prior = await client.query<InteractionRow>("SELECT * FROM interaction WHERE id = $1", [
+            clientId,
+          ]);
+          if (prior.rows[0]?.contact_id !== contactId || prior.rows[0]?.logged_by_person_id !== person.id) {
+            await client.query("ROLLBACK");
+            return reply.code(409).send({ error: "Interaction id already in use" });
+          }
+          row = prior.rows[0];
+          status = 200;
+        } else {
+          await recomputeContactStrength(client, contactId);
+        }
+        await client.query("COMMIT");
+
+        return reply.code(status).send({
+          ...serializeInteraction(row),
+          contactId: row.contact_id,
         });
       } catch (err) {
         await client.query("ROLLBACK");

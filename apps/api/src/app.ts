@@ -4,7 +4,6 @@ import cardsRoutes from "./routes/cards.js";
 import shareSessionsRoutes from "./routes/shareSessions.js";
 import fieldRequestsRoutes from "./routes/fieldRequests.js";
 import contactsRoutes from "./routes/contacts.js";
-import connectionsRoutes from "./routes/connections.js";
 import companiesRoutes from "./routes/companies.js";
 import demoRoutes from "./routes/demo.js";
 
@@ -26,7 +25,6 @@ export async function buildApp() {
   await app.register(shareSessionsRoutes);
   await app.register(fieldRequestsRoutes);
   await app.register(contactsRoutes);
-  await app.register(connectionsRoutes);
   await app.register(companiesRoutes);
 
   // Demo-only identity switcher. Registered at buildApp() time so the env var is read per

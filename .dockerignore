@@ -32,3 +32,4 @@ test-results
 
 *.log
 npm-debug.log*
+backups

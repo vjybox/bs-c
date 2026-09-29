@@ -48,12 +48,12 @@ export default function ContactDetailPage() {
 
   async function handleLogInteraction(e: React.FormEvent) {
     e.preventDefault();
-    if (!auth || !contact?.connectionId) return;
+    if (!auth || !contact) return;
     setLogging(true);
     setLogError(null);
     try {
       const newInteraction = await logInteraction(
-        contact.connectionId,
+        contact.id,
         auth.editToken,
         channel,
         summary.trim() || undefined,

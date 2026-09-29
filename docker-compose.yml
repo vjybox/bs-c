@@ -1,24 +1,29 @@
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: digital_identity
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./apps/api/src/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    # No schema mount: the api applies apps/api/migrations at boot, on a new database and on
+    # every upgrade alike, so a schema change never needs the volume deleted.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 10
-    # Deliberately not published. Only api/seed reach it, over the compose network.
+    # Deliberately not published. Only api/seed/backup reach it, over the compose network.
     # Publishing it would put these credentials on your LAN.
 
-  # One-shot: populates demo data, then exits 0. Idempotent — re-running `up` is a no-op
-  # once the database has people in it. Reuses the api image (cached layers, no second build).
+  # Demo data only, and only when asked for: it runs under the `demo` profile, e.g.
+  #   DEMO_MODE=true docker compose --profile demo up --build
+  # Without the profile this service does not exist, so a real deployment never gets the
+  # seeded personas (whose tokens are committed to git). One-shot and idempotent.
   seed:
+    profiles: [demo]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -38,31 +43,69 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/digital_identity
       PORT: "4000"
       # MUST match the address you actually open in a browser. Share links and QR codes are
       # built from this, so leaving it as localhost on a NAS produces unscannable codes.
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:8080}
-      # Enables GET /api/demo/personas, which hands out edit tokens — full access to every
-      # demo identity, to anyone who can reach this app. Fine for a home-network demo;
-      # set DEMO_MODE=false for anything else.
-      DEMO_MODE: ${DEMO_MODE:-true}
+      # Off by default. When true, GET /api/demo/personas hands out edit tokens and the seeded
+      # demo tokens are accepted. Pair it with --profile demo; never set it on a real deployment.
+      DEMO_MODE: ${DEMO_MODE:-false}
     depends_on:
       postgres:
         condition: service_healthy
+      # Waits for the seed when the demo profile is active; ignored when it is not.
       seed:
         condition: service_completed_successfully
+        required: false
     # Deliberately not published. nginx reaches it in-network as http://api:4000.
 
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
     depends_on:
       - api
     ports:
       - "${WEB_PORT:-8080}:80"
+
+  # Logical backups to ./backups on the host, in pg_dump's custom format (restore with
+  # pg_restore; see apps/README.md). One dump immediately, then every BACKUP_INTERVAL_SECONDS
+  # (default daily; set 3600 around an event). Dumps older than BACKUP_RETENTION_DAYS go.
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATABASE: digital_identity
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          f=/backups/digital_identity-$$(date -u +%Y%m%dT%H%M%SZ).dump
+          # Written under a temp name so a half-finished dump is never mistaken for a good one.
+          if pg_dump -Fc -f "$$f.partial"; then
+            mv "$$f.partial" "$$f" && echo "backup: wrote $$f"
+          else
+            rm -f "$$f.partial"; echo "backup: FAILED" >&2
+          fi
+          find /backups -name 'digital_identity-*.dump' -mtime +$$BACKUP_RETENTION_DAYS -delete
+          sleep "$$BACKUP_INTERVAL_SECONDS"
+        done
+    healthcheck:
+      disable: true
 
 volumes:
   postgres-data:
