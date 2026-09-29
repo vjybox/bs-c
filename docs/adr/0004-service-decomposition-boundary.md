@@ -2,6 +2,8 @@
 
 **Status**: Accepted · **Date**: 2026-06-30 · **Full reasoning**: [`01-architecture/00-system-architecture.md`](../01-architecture/00-system-architecture.md)
 
+> **Implementation status (2026-09-29).** A single modular-monolith process. Every write emits an outbox event in its own transaction (migration `0003`, `apps/api/src/events.ts`); no module consumes them yet, so the event-bus contract exists on the producing side only ([TD-02](../04-implementation/tech-debt.md)).
+
 ## Context
 
 The platform must scale from a single user to 100M users without a major architectural rewrite, while staying operationally simple enough to ship a v1 quickly.

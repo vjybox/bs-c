@@ -1,10 +1,10 @@
 # Digital Identity Platform — Documentation Corpus
 
-> Status: v0.2 · Last updated: 2026-09-27 · See [`CHANGELOG.md`](CHANGELOG.md) for revision history and [`TODO.md`](TODO.md) for the remaining backlog.
+> Status: v0.3 · Last updated: 2026-09-29 · See [`CHANGELOG.md`](CHANGELOG.md) for revision history and [`TODO.md`](TODO.md) for the remaining backlog.
 
 This is the design documentation for the Digital Identity Platform — positioned as "the operating system for professional identity": a single, AI-native system unifying identity, networking, reputation, portfolio, certifications, documents, meetings, AI assistants, knowledge, CRM, collaboration, and communication, which today live fragmented across a digital-business-card app, a CRM, a knowledge base, a meeting tool, and a handful of point integrations between them. See [`00-vision/00-product-philosophy.md`](00-vision/00-product-philosophy.md) for the full thesis and explicit non-goals (this is not a clone of any single named competitor).
 
-This corpus is pure design documentation — Markdown + Mermaid diagrams, no application code. It is the output of a single architecture/design pass, not a finished product spec; open questions and explicitly deferred decisions are called out throughout rather than papered over.
+This corpus is design documentation — Markdown + Mermaid diagrams. *(Amended in v0.3: a working implementation of the Phase 1 wedge now lives in [`../apps/`](../apps/README.md). Where it deliberately differs from a design here, the difference is recorded in an ADR or a dated note beside the original text. The build order is in [`04-implementation/phases.md`](04-implementation/phases.md) and the known gaps are in [`04-implementation/tech-debt.md`](04-implementation/tech-debt.md).)* It is the output of a single architecture/design pass, not a finished product spec; open questions and explicitly deferred decisions are called out throughout rather than papered over.
 
 ## How to Read This Corpus
 
@@ -27,7 +27,8 @@ docs/
 ├── 01-architecture/            9 master architecture/decision docs + the experience rulebook
 ├── 02-modules/                 6 flagship (full-depth) + 10 condensed module docs
 ├── 03-data-model/              consolidated cross-module ER overview
-└── adr/                        16 Architecture Decision Records + index
+├── 04-implementation/          build phases and gates; technical-debt register
+└── adr/                        23 Architecture Decision Records + index
 ```
 
 ## Conventions

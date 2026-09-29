@@ -2,6 +2,8 @@
 
 **Status**: Accepted · **Date**: 2026-06-30 · **Full reasoning**: [`01-architecture/01-data-architecture.md`](../01-architecture/01-data-architecture.md) §1
 
+> **Implementation status (2026-09-29).** Partially implemented: every tenant-scoped table carries `tenant_id NOT NULL` and every person has a personal tenant (migration `0003`), enforced by [ADR-0022](0022-architecture-fitness-tests.md). **RLS policies are not enabled yet** ([tech-debt TD-01](../04-implementation/tech-debt.md)); isolation is currently by owner checks in application code. Scoped exceptions: `company_profile` ([ADR-0016](0016-public-company-directory-closed-people-graph.md)) and `connection` ([ADR-0020](0020-interactions-owned-by-contact.md)).
+
 ## Context
 
 The platform must serve individual professionals (millions of tiny tenants) and enterprises (a small number of large, compliance-sensitive tenants) on one data model, scaling toward 100M users without a tenancy-model rewrite.

@@ -2,6 +2,8 @@
 
 **Status**: Accepted · **Date**: 2026-09-27 · **Full reasoning**: [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) §5 · **Depends on**: [ADR-0014](0014-desktop-strategy-responsive-web.md)
 
+> **Affected by [ADR-0019](0019-installable-web-app-before-native.md) (2026-09-29).** No React Native codebase exists yet, so nothing is shared. The web app keeps the layering this ADR prescribes (`api.ts`, `types.ts`, `offline-queue.ts` and `i18n/` separate from components) so that sharing becomes possible when native starts.
+
 ## Context
 
 [ADR-0014](0014-desktop-strategy-responsive-web.md) makes the browser the desktop product, yet no web-client architecture is documented anywhere in this corpus — [`08-tech-stack-options-matrix.md`](../01-architecture/08-tech-stack-options-matrix.md) carries a "Mobile client" row and no web row. The web client is now load-bearing for every desktop-shaped workflow and entirely undefined.

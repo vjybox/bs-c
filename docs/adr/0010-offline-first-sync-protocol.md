@@ -2,6 +2,8 @@
 
 **Status**: Accepted · **Date**: 2026-06-30 · **Related**: Product Philosophy's "offline-first where the moment demands it" tenet ([`00-vision/00-product-philosophy.md`](../00-vision/00-product-philosophy.md) §4); [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) §5 states which journeys carry the offline obligation and which do not
 
+> **Implementation status (2026-09-29).** Only append-only captures (new contacts, new interactions) work offline, via an IndexedDB queue and client-generated ids as idempotency keys ([ADR-0020](0020-interactions-owned-by-contact.md)). No record is edited offline, so the versioned last-write-wins below is not yet needed; it becomes required the first time an edit is queued ([TD-11](../04-implementation/tech-debt.md)).
+
 ## Context
 
 Mobile card-sharing and contact-capture flows must work without connectivity (events, venues with poor signal) and sync cleanly when connectivity returns. Most platform data (a captured contact, a meeting note) has a clear single-owner-at-a-time write pattern; a smaller set (shared Knowledge docs, Collaboration module content) has genuine concurrent-edit needs.

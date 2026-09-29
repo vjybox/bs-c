@@ -2,6 +2,8 @@
 
 **Status**: Accepted · **Date**: 2026-06-30 · **Full reasoning**: [`01-architecture/05-security-privacy-compliance.md`](../01-architecture/05-security-privacy-compliance.md) §3
 
+> **Amended by [ADR-0017](0017-interim-authentication-magic-link.md) (2026-09-29).** Until its revisit trigger fires, authentication is a self-built magic-link + session-cookie implementation behind the `AuthProvider` abstraction this ADR requires. The buy-CIAM decision below remains the target.
+
 ## Context
 
 The platform needs enterprise-ready authentication (SSO, SCIM provisioning, MFA) and individual-user authentication on the same `Account` model, with auth being one of the highest-severity places to introduce a security vulnerability.

@@ -1,6 +1,6 @@
 # Cross-Module Entity-Relationship Overview
 
-> Status: v0.2 · Owner: Architecture · Last updated: 2026-09-27
+> Status: v0.3 · Owner: Architecture · Last updated: 2026-09-29
 > Scope: design-level ER diagram (key entities and relationships, not full DDL/column lists). Per-module docs reference this diagram rather than redefining shared entities.
 
 ## 1. Consolidated Diagram
@@ -8,6 +8,7 @@
 ```mermaid
 erDiagram
     PERSON ||--o{ ACCOUNT : "authenticates via"
+    TENANT ||--o{ PERSON : "is home of (ADR-0001)"
     PERSON ||--o{ DIGITAL_CARD : "presents as"
     DIGITAL_CARD ||--o{ CARD_FIELD : contains
     PERSON ||--o{ MEMBERSHIP : "belongs to"
@@ -16,7 +17,7 @@ erDiagram
 
     PERSON ||--o{ CONTACT : "owns relationship record"
     PERSON ||--o{ CONNECTION : "is endpoint of"
-    CONNECTION ||--o{ INTERACTION : "logs touchpoint"
+    CONTACT ||--o{ INTERACTION : "logs private touchpoint (ADR-0020)"
     CONTACT }o--o{ TAG : tagged
     CONTACT }o--o{ NETWORK_SEGMENT : "grouped into"
     CONTACT ||--o{ CONTACT : "reportsTo (owner-private edge)"
@@ -54,6 +55,8 @@ erDiagram
     PERSON ||--o{ CONSENT_RECORD : grants
     PERSON ||--o{ DATA_SUBJECT_REQUEST : files
 ```
+
+> **v0.3 changes (2026-09-29).** `INTERACTION` now hangs off the author's `CONTACT`, not the shared `CONNECTION`: under the v0.2 edge, each person could read the other's private notes ([ADR-0020](../adr/0020-interactions-owned-by-contact.md)). `CONNECTION` is a data-free edge and is tenant-less, joining `COMPANY_PROFILE` as the second scoped exception to tenant scoping. `TENANT` is shown because every person now has a personal tenant, and every tenant-scoped row carries `tenant_id`. Not drawn: `OUTBOX_EVENT` (tenant-scoped, one row per committed write, ids only — [ADR-0007](../adr/0007-event-backbone-choice.md) amendment) and `SCHEMA_MIGRATIONS` ([ADR-0021](../adr/0021-schema-migrations.md)), which are infrastructure rather than domain entities.
 
 ## 2. Entity Ownership Map
 

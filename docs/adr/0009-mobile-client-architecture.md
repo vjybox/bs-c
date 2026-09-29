@@ -2,6 +2,8 @@
 
 **Status**: Accepted · **Date**: 2026-06-30 · **Related**: Product Philosophy's "mobile-first, surface-honest" tenet ([`00-vision/00-product-philosophy.md`](../00-vision/00-product-philosophy.md) §4), made checkable in [`01-architecture/09-experience-and-interaction-rulebook.md`](../01-architecture/09-experience-and-interaction-rulebook.md) §5 · **Extended by**: [ADR-0014](0014-desktop-strategy-responsive-web.md) (desktop), [ADR-0015](0015-web-client-architecture.md) (web)
 
+> **Deferred by [ADR-0019](0019-installable-web-app-before-native.md) (2026-09-29).** The installable web app is the only client until a stated trigger fires. This decision remains the target for native.
+
 ## Context
 
 "Mobile-first" is a hard, explicit requirement. Card sharing (NFC/QR) and on-the-go contact capture are core flows, not secondary surfaces, so the mobile client architecture is a first-order decision.

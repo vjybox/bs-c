@@ -2,6 +2,8 @@
 
 **Status**: Proposed · **Date**: 2026-06-30 · **Full reasoning**: [`01-architecture/06-scalability-strategy.md`](../01-architecture/06-scalability-strategy.md), [`01-architecture/05-security-privacy-compliance.md`](../01-architecture/05-security-privacy-compliance.md) §6
 
+> **Implementation status (2026-09-29).** Single region. Disaster recovery today: a `backup` service writes `pg_dump` custom-format dumps daily (hourly around an event) with 14-day retention; a restore was verified on a seeded database. **RPO = the backup interval (24 h default, 1 h during an event); RTO = a manual restore, minutes at current size.** Backups sit on the same host unless the operator copies them off ([TD-14](../04-implementation/tech-debt.md)).
+
 ## Context
 
 Enterprise tenants in regulated industries or specific jurisdictions (EU, etc.) may require contractual data-residency guarantees. This decision is marked **Proposed** rather than **Accepted** because no real enterprise contractual demand exists yet to validate the approach against — committing infrastructure spend ahead of need would contradict the corpus's own "defer the expensive decision, keep the seam real" pattern.

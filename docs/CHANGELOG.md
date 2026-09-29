@@ -1,6 +1,57 @@
 # Changelog
 
-All notable changes to this documentation corpus are recorded here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project does not ship versioned software releases — "versions" below refer to milestones in the design corpus itself, governed by git history (no document is ever overwritten in place; revisions land as new commits, and superseded content is marked rather than deleted).
+All notable changes to this documentation corpus are recorded here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project does not ship versioned software releases — "versions" below refer to milestones in the design corpus itself (and, from 0.3.0, the implementation milestones behind them), governed by git history (no document is ever overwritten in place; revisions land as new commits, and superseded content is marked rather than deleted).
+
+## [0.3.0] - 2026-09-29
+
+This entry covers design-corpus changes **and**, for the first time, the implementation milestones behind them. The corpus now has a working implementation in `apps/`, and a changelog that ignored it would hide exactly the kind of drift this release fixes.
+
+### Added
+
+- **Seven ADRs** recording decisions the implementation had made without a record:
+  - [0017](adr/0017-interim-authentication-magic-link.md) interim magic-link authentication (amends 0008);
+  - [0018](adr/0018-wedge-first-sequencing.md) wedge-first sequencing;
+  - [0019](adr/0019-installable-web-app-before-native.md) installable web app before native (defers 0009);
+  - [0020](adr/0020-interactions-owned-by-contact.md) interactions belong to the author's contact;
+  - [0021](adr/0021-schema-migrations.md) forward-only SQL migrations;
+  - [0022](adr/0022-architecture-fitness-tests.md) architecture fitness tests;
+  - [0023](adr/0023-ui-message-catalogue.md) UI message catalogue.
+
+  Each compares alternatives and names its revisit trigger.
+- **`04-implementation/phases.md`**: the build order, the conference-test gate with pass bars and kill criteria fixed in advance, what each deferred capability waits for, and a map from every pillar of the brief to its phase.
+- **`04-implementation/tech-debt.md`**: a register of 19 known gaps between the code and accepted decisions, each with severity, cause, fix and due point.
+
+### Changed
+
+- **The Contacts data model is corrected.** `contacts-networking-graph.md` §7 and the ER diagram hung `Interaction` off the shared `Connection`. Implemented as designed, that let each person read the other's private notes. It contradicted rulebook §10.5, which outranks module docs. `Interaction` now belongs to the author's `Contact`, and strength and recency are per contact. The original text is kept, marked as amended.
+- **Existing ADRs carry dated notes** instead of being rewritten:
+  - amended: 0007 (outbox payloads carry ids only) and 0008;
+  - deferred: 0009;
+  - affected: 0015;
+  - implementation status: 0001, 0003, 0004, 0005, 0010, 0012.
+
+  0012 now states the actual RPO/RTO.
+- **`README.md`** no longer claims the corpus has no application code.
+
+### Implementation milestones (in `apps/`)
+
+- **Slice 1: stop leaks and data loss.**
+  - Private notes scoped to their author.
+  - Idempotent offline replays via client-generated ids.
+  - Recency from `occurredAt`, with future dates clamped.
+  - Migrations replacing `docker compose down -v`.
+  - Nightly backups, with a verified restore.
+  - Restart policies.
+  - Demo identities off by default.
+  - Global company edits closed.
+  - The field-request race closed.
+- **Platform hooks:**
+  - `tenant_id` on every tenant-scoped table;
+  - transactional outbox events on every write, with id-only payloads;
+  - the REST API versioned under `/api/v1` with a generated OpenAPI document;
+  - `interaction.visibility`;
+  - all web UI text moved to a message catalogue;
+  - fitness tests that fail when any of these hooks drifts.
 
 ## [0.2.1] - 2026-09-27
 

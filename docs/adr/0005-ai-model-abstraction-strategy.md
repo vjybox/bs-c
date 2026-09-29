@@ -2,6 +2,8 @@
 
 **Status**: Accepted · **Date**: 2026-06-30 · **Full reasoning**: [`01-architecture/02-ai-abstraction-layer.md`](../01-architecture/02-ai-abstraction-layer.md)
 
+> **Implementation status (2026-09-29).** Not implemented, deliberately: AI is deferred by [ADR-0018](0018-wedge-first-sequencing.md). The outbox (ADR-0007) is the hook AI context will consume; no provider SDK is imported anywhere, which [ADR-0022](0022-architecture-fitness-tests.md) should assert once the `ModelRouter` exists.
+
 ## Context
 
 The platform must support OpenAI, Anthropic, Google, Meta, local/self-hosted, enterprise-private, and future-unknown models, with per-tenant policy control (compliance allow-lists, data residency) and the ability to swap providers without rewriting feature code.

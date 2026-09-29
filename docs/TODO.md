@@ -59,7 +59,7 @@ The strongest proposals from each module doc's own Future Enhancements section, 
 
 ## Other Known Gaps
 
-- No module doc in this corpus has been validated against a real OpenAPI/GraphQL schema generation pass — API Design sections are design-level sketches, consistent with the corpus convention stated in `docs/README.md`, but turning them into implementable contracts is unstarted work.
+- No module doc in this corpus has been validated against a real OpenAPI/GraphQL schema generation pass — API Design sections are design-level sketches, consistent with the corpus convention stated in `docs/README.md`, but turning them into implementable contracts is unstarted work. *(Partly addressed in v0.3: the implemented slice publishes a generated OpenAPI document at `/api/v1/openapi.json`, and its paths are noted beside the Contacts module's API table. The other module docs remain sketches.)*
 - No load-testing or capacity-planning numbers back the scalability tier triggers in `01-architecture/06-scalability-strategy.md` — they are designed thresholds, not measured ones, until the platform has real traffic.
 - Accessibility — **resolved in v0.2.** WCAG 2.2 Level AA is now a binding MUST with checkable component-level specifics (contrast ratios, target sizes, colour-independence, screen-reader and keyboard completability, reduced motion) in [`01-architecture/09-experience-and-interaction-rulebook.md`](01-architecture/09-experience-and-interaction-rulebook.md) §3.4. What remains is a per-component implementation guide, not the conformance decision.
 
@@ -74,3 +74,14 @@ Adding a binding cross-cutting rulebook settled several open questions and creat
 - **No AI enrichment exists.** Rulebook 9.5 allows `enrichmentSource = ai`; the shipped code only produces `derived` (email-domain extraction) and `manual`. Real model-backed enrichment of company fields is unstarted, and both the rulebook and ADR-0016 now say so explicitly rather than implying otherwise.
 - **Design the `CompanyProfile` global write path.** A tenant-less, user-writable record needs moderation, abuse controls, and conflict resolution between two tenants editing the same row. ADR-0016 names this as undesigned and it blocks any real directory rollout. Until it exists, `PATCH /api/companies/:id` returns 403: the endpoint as first built let any signed-in person rename a company for every tenant.
 - **Instrument the friction budgets.** Rulebook §3's figures are chosen, not observed. The first instrumentation pass should be treated as evidence to revise them rather than as a score against them.
+
+## Created by v0.3 (Drift reconciliation)
+
+A drift review compared the brief, the design corpus and the code. The code had diverged from ADR-0001, 0003, 0004/0007, 0008, 0009 and the Contacts data model, with no record. It was reconciled by recording each decision rather than silently reverting either side: ADR-0017 to ADR-0023, dated notes on the affected ADRs, and code hooks enforced by fitness tests.
+
+- **Phase 1 remaining work, gates and resumption triggers** now live in [`04-implementation/phases.md`](04-implementation/phases.md). This file keeps the design backlog; that file keeps the build order.
+- **Known implementation gaps** live in [`04-implementation/tech-debt.md`](04-implementation/tech-debt.md) (TD-01 to TD-19). High-severity items to clear before any real user: TD-03, TD-04, TD-05 (auth, Slice 2) and TD-13 (off-host backups).
+- **Needed from the product owner for Slice 2:** a public domain with TLS, an email-sending account with DNS access, and the event date.
+- **Recommended future feature — fitness tests for the remaining checkable ADRs.** ADR-0022's extension list (RLS on, `ModelRouter` as the only provider import site, `EmbeddingStore` as the only vector writer, response schemas on every route). *Why:* drift is cheapest to catch in the change that causes it. *Dependency:* each ADR's implementation.
+- **Recommended future feature — outbox-fed audit log.** Every committed write already produces an id-only event in its tenant. A tenant-visible "activity on your data" view (who requested which field, when a share was opened) is a small consumer away. It also delivers the audit trail `05-security-privacy-compliance.md` §5 requires. *Business value:* trust, and an enterprise checkbox. *Dependency:* the TD-02 relay.
+

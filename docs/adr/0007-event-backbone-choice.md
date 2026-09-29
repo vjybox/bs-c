@@ -2,6 +2,8 @@
 
 **Status**: Accepted · **Date**: 2026-06-30 · **Related**: [`01-architecture/00-system-architecture.md`](../01-architecture/00-system-architecture.md), [`01-architecture/03-automation-workflow-engine.md`](../01-architecture/03-automation-workflow-engine.md)
 
+> **Implementation status and amendment (2026-09-29).** The outbox table is implemented (migration `0003`); **the relay is not** ([TD-02](../04-implementation/tech-debt.md)). Amendment: **event payloads carry identifiers and non-sensitive attributes only — never field values, note text or names.** Consumers re-read through the API, where permissions apply, so the outbox never becomes a second, unpermissioned copy of private data. Enforced by [ADR-0022](0022-architecture-fitness-tests.md).
+
 ## Context
 
 The modular-monolith-with-event-bus architecture (ADR-0004) and the automation engine (ADR-0006) both depend on a reliable event backbone for cross-module communication, automation triggers, audit logging, and webhook delivery.
