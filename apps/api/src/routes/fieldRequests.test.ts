@@ -19,7 +19,7 @@ afterAll(async () => {
 async function setupCardWithSession() {
   const cardResponse = await app.inject({
     method: "POST",
-    url: "/api/cards",
+    url: "/api/v1/cards",
     payload: {
       displayName: "Grace Hopper",
       fields: [
@@ -32,7 +32,7 @@ async function setupCardWithSession() {
 
   const sessionResponse = await app.inject({
     method: "POST",
-    url: `/api/cards/${created.card.id}/share-sessions`,
+    url: `/api/v1/cards/${created.card.id}/share-sessions`,
     headers: { "x-edit-token": created.editToken },
     payload: { channel: "link" },
   });
@@ -51,7 +51,7 @@ describe("POST /api/share-sessions/:sessionId/field-requests", () => {
     const { sessionId, publicField } = await setupCardWithSession();
     const response = await app.inject({
       method: "POST",
-      url: `/api/share-sessions/${sessionId}/field-requests`,
+      url: `/api/v1/share-sessions/${sessionId}/field-requests`,
       payload: { fieldId: publicField.id },
     });
     expect(response.statusCode).toBe(400);
@@ -61,21 +61,21 @@ describe("POST /api/share-sessions/:sessionId/field-requests", () => {
     const { sessionId, requestableField, editToken } = await setupCardWithSession();
     const firstRequest = await app.inject({
       method: "POST",
-      url: `/api/share-sessions/${sessionId}/field-requests`,
+      url: `/api/v1/share-sessions/${sessionId}/field-requests`,
       payload: { fieldId: requestableField.id },
     });
     const fieldRequestId = firstRequest.json().id;
 
     await app.inject({
       method: "POST",
-      url: `/api/field-requests/${fieldRequestId}/respond`,
+      url: `/api/v1/field-requests/${fieldRequestId}/respond`,
       headers: { "x-edit-token": editToken },
       payload: { approve: true },
     });
 
     const secondRequest = await app.inject({
       method: "POST",
-      url: `/api/share-sessions/${sessionId}/field-requests`,
+      url: `/api/v1/share-sessions/${sessionId}/field-requests`,
       payload: { fieldId: requestableField.id },
     });
     expect(secondRequest.statusCode).toBe(400);
@@ -85,12 +85,12 @@ describe("POST /api/share-sessions/:sessionId/field-requests", () => {
     const { sessionId, requestableField } = await setupCardWithSession();
     const first = await app.inject({
       method: "POST",
-      url: `/api/share-sessions/${sessionId}/field-requests`,
+      url: `/api/v1/share-sessions/${sessionId}/field-requests`,
       payload: { fieldId: requestableField.id },
     });
     const second = await app.inject({
       method: "POST",
-      url: `/api/share-sessions/${sessionId}/field-requests`,
+      url: `/api/v1/share-sessions/${sessionId}/field-requests`,
       payload: { fieldId: requestableField.id },
     });
 
@@ -106,7 +106,7 @@ describe("field request race", () => {
     const fire = () =>
       app.inject({
         method: "POST",
-        url: `/api/share-sessions/${sessionId}/field-requests`,
+        url: `/api/v1/share-sessions/${sessionId}/field-requests`,
         payload: { fieldId: requestableField.id },
       });
     const results = await Promise.all(Array.from({ length: 20 }, fire));
@@ -124,21 +124,21 @@ describe("POST /api/field-requests/:id/respond", () => {
     const { sessionId, requestableField, editToken } = await setupCardWithSession();
     const requestResponse = await app.inject({
       method: "POST",
-      url: `/api/share-sessions/${sessionId}/field-requests`,
+      url: `/api/v1/share-sessions/${sessionId}/field-requests`,
       payload: { fieldId: requestableField.id },
     });
     const fieldRequestId = requestResponse.json().id;
 
     const respondResponse = await app.inject({
       method: "POST",
-      url: `/api/field-requests/${fieldRequestId}/respond`,
+      url: `/api/v1/field-requests/${fieldRequestId}/respond`,
       headers: { "x-edit-token": editToken },
       payload: { approve: true },
     });
     expect(respondResponse.statusCode).toBe(200);
     expect(respondResponse.json().status).toBe("approved");
 
-    const sessionView = await app.inject({ method: "GET", url: `/api/share-sessions/${sessionId}` });
+    const sessionView = await app.inject({ method: "GET", url: `/api/v1/share-sessions/${sessionId}` });
     const visibleLabels = sessionView.json().fields.map((f: { label: string }) => f.label);
     expect(visibleLabels).toContain("Phone");
   });
@@ -147,21 +147,21 @@ describe("POST /api/field-requests/:id/respond", () => {
     const { sessionId, requestableField, editToken } = await setupCardWithSession();
     const requestResponse = await app.inject({
       method: "POST",
-      url: `/api/share-sessions/${sessionId}/field-requests`,
+      url: `/api/v1/share-sessions/${sessionId}/field-requests`,
       payload: { fieldId: requestableField.id },
     });
     const fieldRequestId = requestResponse.json().id;
 
     const respondResponse = await app.inject({
       method: "POST",
-      url: `/api/field-requests/${fieldRequestId}/respond`,
+      url: `/api/v1/field-requests/${fieldRequestId}/respond`,
       headers: { "x-edit-token": editToken },
       payload: { approve: false },
     });
     expect(respondResponse.statusCode).toBe(200);
     expect(respondResponse.json().status).toBe("denied");
 
-    const sessionView = await app.inject({ method: "GET", url: `/api/share-sessions/${sessionId}` });
+    const sessionView = await app.inject({ method: "GET", url: `/api/v1/share-sessions/${sessionId}` });
     const visibleLabels = sessionView.json().fields.map((f: { label: string }) => f.label);
     expect(visibleLabels).not.toContain("Phone");
   });
@@ -170,14 +170,14 @@ describe("POST /api/field-requests/:id/respond", () => {
     const { sessionId, requestableField } = await setupCardWithSession();
     const requestResponse = await app.inject({
       method: "POST",
-      url: `/api/share-sessions/${sessionId}/field-requests`,
+      url: `/api/v1/share-sessions/${sessionId}/field-requests`,
       payload: { fieldId: requestableField.id },
     });
     const fieldRequestId = requestResponse.json().id;
 
     const respondResponse = await app.inject({
       method: "POST",
-      url: `/api/field-requests/${fieldRequestId}/respond`,
+      url: `/api/v1/field-requests/${fieldRequestId}/respond`,
       headers: { "x-edit-token": "wrong-token" },
       payload: { approve: true },
     });

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { getShareSession, getStoredAuth, requestField, saveContact } from "../api";
 import CardView from "../components/CardView";
 import type { RecipientCardView } from "../types";
+import { t } from "../i18n";
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -27,7 +28,7 @@ export default function RecipientView() {
           setError(null);
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load card");
+        if (!cancelled) setError(err instanceof Error ? err.message : t("recipient.loadFailed"));
       }
     }
 
@@ -45,7 +46,7 @@ export default function RecipientView() {
     try {
       await requestField(sessionId, fieldId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to request field");
+      setError(err instanceof Error ? err.message : t("recipient.requestFailed"));
     }
   }
 
@@ -58,7 +59,7 @@ export default function RecipientView() {
       setSaveState("saved");
     } catch (err) {
       setSaveState("error");
-      setSaveError(err instanceof Error ? err.message : "Failed to save contact");
+      setSaveError(err instanceof Error ? err.message : t("recipient.saveFailed"));
     }
   }
 
@@ -73,7 +74,7 @@ export default function RecipientView() {
   if (!view) {
     return (
       <div className="page">
-        <p>Loading…</p>
+        <p>{t("common.loading")}</p>
       </div>
     );
   }
@@ -99,13 +100,13 @@ export default function RecipientView() {
       {auth && (
         <div style={{ marginTop: "1rem" }}>
           {saveState === "saved" ? (
-            <p>Contact saved ✓</p>
+            <p>{t("recipient.saved")}</p>
           ) : (
             <button
               onClick={handleSaveContact}
               disabled={saveState === "saving"}
             >
-              {saveState === "saving" ? "Saving…" : "Save Contact"}
+              {saveState === "saving" ? t("common.saving") : t("recipient.save")}
             </button>
           )}
           {saveState === "error" && saveError && (

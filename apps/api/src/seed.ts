@@ -138,13 +138,18 @@ interface InsertedPerson {
 
 async function insertPerson(client: PoolClient, p: SeedPerson): Promise<InsertedPerson> {
   const personRes = await client.query<{ id: string }>(
-    "INSERT INTO person (display_name, headline, edit_token) VALUES ($1, $2, $3) RETURNING id",
+    // Each person gets a personal tenant, exactly as POST /api/v1/cards does. The seed is a
+    // bulk import, so it writes no outbox events: nothing happened, it was loaded.
+    `WITH t AS (INSERT INTO tenant (kind) VALUES ('personal') RETURNING id)
+     INSERT INTO person (tenant_id, display_name, headline, edit_token)
+     SELECT t.id, $1, $2, $3 FROM t RETURNING id`,
     [p.displayName, p.headline, p.editToken],
   );
   const personId = personRes.rows[0].id;
 
   const cardRes = await client.query<{ id: string }>(
-    "INSERT INTO digital_card (person_id, label, is_default) VALUES ($1, 'Default', true) RETURNING id",
+    `INSERT INTO digital_card (tenant_id, person_id, label, is_default)
+     VALUES ((SELECT tenant_id FROM person WHERE id = $1), $1, 'Default', true) RETURNING id`,
     [personId],
   );
   const cardId = cardRes.rows[0].id;
@@ -155,8 +160,8 @@ async function insertPerson(client: PoolClient, p: SeedPerson): Promise<Inserted
   const fieldVisibility = new Map<string, FieldVisibility>();
   for (const [i, f] of p.fields.entries()) {
     const res = await client.query<{ id: string }>(
-      `INSERT INTO card_field (card_id, field_type, label, value, visibility, display_order)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      `INSERT INTO card_field (tenant_id, card_id, field_type, label, value, visibility, display_order)
+       VALUES ((SELECT tenant_id FROM digital_card WHERE id = $1), $1, $2, $3, $4, $5, $6) RETURNING id`,
       [cardId, f.fieldType, f.label, f.value, f.visibility, i],
     );
     fieldIds.set(f.label, res.rows[0].id);
@@ -275,35 +280,35 @@ async function seed(client: PoolClient): Promise<void> {
   const personalEmailId = mara.fieldIds.get("Personal email")!;
 
   const liveSession = await client.query<{ id: string }>(
-    `INSERT INTO share_session (card_id, channel, scoped_field_ids, expires_at)
-     VALUES ($1, 'link', $2, $3) RETURNING id`,
+    `INSERT INTO share_session (tenant_id, card_id, channel, scoped_field_ids, expires_at)
+     VALUES ((SELECT tenant_id FROM digital_card WHERE id = $1), $1, 'link', $2, $3) RETURNING id`,
     [mara.cardId, liveScoped, daysFromNow(7)],
   );
 
   // The approved request's field is appended to the session's scope, matching what the
-  // real POST /api/field-requests/:id/respond route does on approval.
+  // real POST /api/v1/field-requests/:id/respond route does on approval.
   const approvedSession = await client.query<{ id: string }>(
-    `INSERT INTO share_session (card_id, channel, scoped_field_ids, expires_at)
-     VALUES ($1, 'qr', $2, $3) RETURNING id`,
+    `INSERT INTO share_session (tenant_id, card_id, channel, scoped_field_ids, expires_at)
+     VALUES ((SELECT tenant_id FROM digital_card WHERE id = $1), $1, 'qr', $2, $3) RETURNING id`,
     [mara.cardId, [...liveScoped, personalEmailId], daysFromNow(7)],
   );
 
   await client.query(
-    `INSERT INTO share_session (card_id, channel, scoped_field_ids, expires_at)
-     VALUES ($1, 'link', $2, $3)`,
+    `INSERT INTO share_session (tenant_id, card_id, channel, scoped_field_ids, expires_at)
+     VALUES ((SELECT tenant_id FROM digital_card WHERE id = $1), $1, 'link', $2, $3)`,
     [mara.cardId, liveScoped, daysAgo(2)],
   );
 
   // One pending request (so the Requests screen has something to approve) and one already
   // approved. Both target a request_required field, which the real route enforces.
   await client.query(
-    `INSERT INTO field_request (share_session_id, field_id, status, created_at)
-     VALUES ($1, $2, 'pending', $3)`,
+    `INSERT INTO field_request (tenant_id, share_session_id, field_id, status, created_at)
+     VALUES ((SELECT tenant_id FROM share_session WHERE id = $1), $1, $2, 'pending', $3)`,
     [liveSession.rows[0].id, personalEmailId, daysAgo(1)],
   );
   await client.query(
-    `INSERT INTO field_request (share_session_id, field_id, status, created_at, resolved_at)
-     VALUES ($1, $2, 'approved', $3, $4)`,
+    `INSERT INTO field_request (tenant_id, share_session_id, field_id, status, created_at, resolved_at)
+     VALUES ((SELECT tenant_id FROM share_session WHERE id = $1), $1, $2, 'approved', $3, $4)`,
     [approvedSession.rows[0].id, personalEmailId, daysAgo(20), daysAgo(19)],
   );
 
@@ -319,8 +324,8 @@ async function seed(client: PoolClient): Promise<void> {
     const ownerCompanyId = await deriveCompanyForPerson(client, owner.personId);
 
     const contactRes = await client.query<{ id: string }>(
-      `INSERT INTO contact (owner_person_id, subject_person_id, capture_source, capture_context, company_profile_id, created_at)
-       VALUES ($1, $2, 'card_share', $3, $4, $5)
+      `INSERT INTO contact (tenant_id, owner_person_id, subject_person_id, capture_source, capture_context, company_profile_id, created_at)
+       VALUES ((SELECT tenant_id FROM person WHERE id = $1), $1, $2, 'card_share', $3, $4, $5)
        RETURNING id`,
       [
         owner.personId,
@@ -334,8 +339,8 @@ async function seed(client: PoolClient): Promise<void> {
 
     if (rel.alsoReverse) {
       const reverseRes = await client.query<{ id: string }>(
-        `INSERT INTO contact (owner_person_id, subject_person_id, capture_source, capture_context, company_profile_id, created_at)
-         VALUES ($1, $2, 'card_share', $3, $4, $5)
+        `INSERT INTO contact (tenant_id, owner_person_id, subject_person_id, capture_source, capture_context, company_profile_id, created_at)
+         VALUES ((SELECT tenant_id FROM person WHERE id = $1), $1, $2, 'card_share', $3, $4, $5)
          RETURNING id`,
         [
           subject.personId,
@@ -375,8 +380,8 @@ async function seed(client: PoolClient): Promise<void> {
       }
       touched.add(authorContactId);
       await client.query(
-        `INSERT INTO interaction (contact_id, connection_id, logged_by_person_id, channel, summary, occurred_at, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $6)`,
+        `INSERT INTO interaction (tenant_id, contact_id, connection_id, logged_by_person_id, channel, summary, occurred_at, created_at)
+         VALUES ((SELECT tenant_id FROM contact WHERE id = $1), $1, $2, $3, $4, $5, $6, $6)`,
         [authorContactId, connectionId, inserted.get(i.loggedByKey)!.personId, i.channel, i.summary, daysAgo(i.daysAgo)],
       );
     }

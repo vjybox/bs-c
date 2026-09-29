@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getStoredAuth, listContacts } from "../api";
 import type { Contact } from "../types";
+import { t } from "../i18n";
 
 function relativeTime(iso: string | null): string {
-  if (!iso) return "No interactions yet";
+  if (!iso) return t("contacts.noInteractions");
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days === 0) return "Last interaction today";
-  if (days === 1) return "Last interaction yesterday";
-  return `Last interaction ${days} days ago`;
+  if (days === 0) return t("contacts.lastToday");
+  if (days === 1) return t("contacts.lastYesterday");
+  return t("contacts.lastDaysAgo", { count: days });
 }
 
 export default function ContactsList() {
@@ -31,19 +32,19 @@ export default function ContactsList() {
 
   return (
     <div className="page">
-      <Link to="/editor">← Back to editor</Link>
-      <h1>My Contacts</h1>
+      <Link to="/editor">{t("common.backToEditor")}</Link>
+      <h1>{t("contacts.title")}</h1>
       {error && <p className="error-text">{error}</p>}
-      {contacts === null && !error && <p>Loading…</p>}
+      {contacts === null && !error && <p>{t("common.loading")}</p>}
       {contacts !== null && contacts.length === 0 && (
-        <p className="muted-text">No contacts yet — save a contact from a shared card.</p>
+        <p className="muted-text">{t("contacts.empty")}</p>
       )}
       {contacts !== null && contacts.length > 0 && (
         <ul className="contact-list">
           {contacts.map((c) => (
             <li key={c.id} className="contact-row">
               <Link to={`/contacts/${c.id}`} className="contact-name">
-                {c.subject?.displayName ?? "(unknown)"}
+                {c.subject?.displayName ?? t("common.unknownPerson")}
               </Link>
               {c.subject?.headline && (
                 <span className="contact-headline">{c.subject.headline}</span>
@@ -52,8 +53,8 @@ export default function ContactsList() {
                 <span className="contact-company">
                   <Link to={`/companies/${c.company.id}`}>{c.company.name}</Link>
                   {c.company.enrichmentSource === "derived" && (
-                    <span className="inferred-badge" title="Derived from an email domain">
-                      inferred
+                    <span className="inferred-badge" title={t("common.inferredTitle")}>
+                      {t("common.inferred")}
                     </span>
                   )}
                 </span>

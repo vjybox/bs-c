@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getStoredAuth, listMyCompanies } from "../api";
 import type { MyCompany } from "../types";
+import { t } from "../i18n";
 
 export default function CompaniesList() {
   const navigate = useNavigate();
@@ -31,20 +32,14 @@ export default function CompaniesList() {
 
   return (
     <div className="page">
-      <Link to="/editor">← Back to editor</Link>
-      <h1>Companies</h1>
-      <p className="muted-text">
-        Companies you have captured contacts at. The company record itself is shared across
-        everyone; the people you see under it are only ever your own contacts.
-      </p>
+      <Link to="/editor">{t("common.backToEditor")}</Link>
+      <h1>{t("companies.title")}</h1>
+      <p className="muted-text">{t("companies.intro")}</p>
 
       {error && <p className="error-text">{error}</p>}
-      {companies === null && !error && <p>Loading…</p>}
+      {companies === null && !error && <p>{t("common.loading")}</p>}
       {companies !== null && companies.length === 0 && (
-        <p className="muted-text">
-          No companies yet. Save a contact whose card has a work email and their company appears
-          here automatically.
-        </p>
+        <p className="muted-text">{t("companies.empty")}</p>
       )}
 
       {companies && companies.length > 0 && (
@@ -56,10 +51,10 @@ export default function CompaniesList() {
               </Link>
               {c.domain && <span className="contact-headline">{c.domain}</span>}
               <span className="contact-last-interaction">
-                {c.contactCount} {c.contactCount === 1 ? "contact" : "contacts"}
+                {t("companies.contactCount", { count: c.contactCount })}
                 {c.enrichmentSource === "derived" && (
-                  <span className="inferred-badge" title="Derived from an email domain — edit to correct">
-                    inferred
+                  <span className="inferred-badge" title={t("common.inferredTitle")}>
+                    {t("common.inferred")}
                   </span>
                 )}
               </span>

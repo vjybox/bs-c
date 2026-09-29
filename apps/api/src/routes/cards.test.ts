@@ -19,7 +19,7 @@ afterAll(async () => {
 async function createCard() {
   const response = await app.inject({
     method: "POST",
-    url: "/api/cards",
+    url: "/api/v1/cards",
     payload: {
       displayName: "Grace Hopper",
       headline: "Rear Admiral",
@@ -36,7 +36,7 @@ describe("POST /api/cards", () => {
   it("creates a card with fields", async () => {
     const response = await app.inject({
       method: "POST",
-      url: "/api/cards",
+      url: "/api/v1/cards",
       payload: { displayName: "Ada Lovelace", fields: [] },
     });
 
@@ -50,7 +50,7 @@ describe("POST /api/cards", () => {
   it("rejects a missing displayName with 400", async () => {
     const response = await app.inject({
       method: "POST",
-      url: "/api/cards",
+      url: "/api/v1/cards",
       payload: { fields: [] },
     });
 
@@ -62,7 +62,7 @@ describe("POST /api/cards", () => {
 describe("GET /api/cards/:cardId", () => {
   it("returns 401 with no edit token", async () => {
     const { card } = await createCard();
-    const response = await app.inject({ method: "GET", url: `/api/cards/${card.id}` });
+    const response = await app.inject({ method: "GET", url: `/api/v1/cards/${card.id}` });
     expect(response.statusCode).toBe(401);
   });
 
@@ -70,7 +70,7 @@ describe("GET /api/cards/:cardId", () => {
     const { card } = await createCard();
     const response = await app.inject({
       method: "GET",
-      url: `/api/cards/${card.id}`,
+      url: `/api/v1/cards/${card.id}`,
       headers: { "x-edit-token": "wrong-token" },
     });
     expect(response.statusCode).toBe(403);
@@ -79,7 +79,7 @@ describe("GET /api/cards/:cardId", () => {
   it("returns 404 for an unknown card", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/api/cards/00000000-0000-0000-0000-000000000000",
+      url: "/api/v1/cards/00000000-0000-0000-0000-000000000000",
       headers: { "x-edit-token": "wrong-token" },
     });
     expect(response.statusCode).toBe(404);
@@ -89,7 +89,7 @@ describe("GET /api/cards/:cardId", () => {
     const { card, editToken } = await createCard();
     const response = await app.inject({
       method: "GET",
-      url: `/api/cards/${card.id}`,
+      url: `/api/v1/cards/${card.id}`,
       headers: { "x-edit-token": editToken },
     });
 
@@ -104,7 +104,7 @@ describe("POST /api/cards/:cardId/fields", () => {
     const { card, editToken } = await createCard();
     const response = await app.inject({
       method: "POST",
-      url: `/api/cards/${card.id}/fields`,
+      url: `/api/v1/cards/${card.id}/fields`,
       headers: { "x-edit-token": editToken },
       payload: { fieldType: "url", label: "Website", value: "https://example.com", visibility: "public" },
     });
@@ -117,7 +117,7 @@ describe("POST /api/cards/:cardId/fields", () => {
     const { card, editToken } = await createCard();
     const response = await app.inject({
       method: "POST",
-      url: `/api/cards/${card.id}/fields`,
+      url: `/api/v1/cards/${card.id}/fields`,
       headers: { "x-edit-token": editToken },
       payload: { fieldType: "bogus", label: "Website", value: "https://example.com", visibility: "public" },
     });
@@ -129,7 +129,7 @@ describe("POST /api/cards/:cardId/fields", () => {
     const { card } = await createCard();
     const response = await app.inject({
       method: "POST",
-      url: `/api/cards/${card.id}/fields`,
+      url: `/api/v1/cards/${card.id}/fields`,
       payload: { fieldType: "url", label: "Website", value: "https://example.com", visibility: "public" },
     });
 
@@ -143,7 +143,7 @@ describe("PATCH /api/cards/:cardId/fields/:fieldId", () => {
     const fieldId = created.card.fields[0].id;
     const response = await app.inject({
       method: "PATCH",
-      url: `/api/cards/${created.card.id}/fields/${fieldId}`,
+      url: `/api/v1/cards/${created.card.id}/fields/${fieldId}`,
       headers: { "x-edit-token": created.editToken },
       payload: { value: "new@example.com" },
     });
@@ -156,7 +156,7 @@ describe("PATCH /api/cards/:cardId/fields/:fieldId", () => {
     const created = await createCard();
     const response = await app.inject({
       method: "PATCH",
-      url: `/api/cards/${created.card.id}/fields/00000000-0000-0000-0000-000000000000`,
+      url: `/api/v1/cards/${created.card.id}/fields/00000000-0000-0000-0000-000000000000`,
       headers: { "x-edit-token": created.editToken },
       payload: { value: "new@example.com" },
     });
@@ -171,7 +171,7 @@ describe("DELETE /api/cards/:cardId/fields/:fieldId", () => {
     const fieldId = created.card.fields[0].id;
     const response = await app.inject({
       method: "DELETE",
-      url: `/api/cards/${created.card.id}/fields/${fieldId}`,
+      url: `/api/v1/cards/${created.card.id}/fields/${fieldId}`,
       headers: { "x-edit-token": created.editToken },
     });
 
@@ -183,7 +183,7 @@ describe("DELETE /api/cards/:cardId/fields/:fieldId", () => {
     const fieldId = created.card.fields[0].id;
     const response = await app.inject({
       method: "DELETE",
-      url: `/api/cards/${created.card.id}/fields/${fieldId}`,
+      url: `/api/v1/cards/${created.card.id}/fields/${fieldId}`,
       headers: { "x-edit-token": "wrong-token" },
     });
 

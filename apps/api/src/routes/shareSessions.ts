@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { query } from "../db.js";
+import { query, withTransaction } from "../db.js";
+import { emitEvent } from "../events.js";
 import { requireCardOwner } from "../auth.js";
 import type { CardFieldRow, PersonRow, ShareSessionRow } from "../types.js";
 import { cardIdParamsSchema, createShareSessionBodySchema, sessionIdParamsSchema } from "../schemas.js";
@@ -17,7 +18,7 @@ function buildShareUrl(sessionId: string) {
 
 export default async function shareSessionsRoutes(app: FastifyInstance) {
   app.post<{ Params: { cardId: string }; Body: CreateShareSessionBody }>(
-    "/api/cards/:cardId/share-sessions",
+    "/api/v1/cards/:cardId/share-sessions",
     { schema: { params: cardIdParamsSchema, body: createShareSessionBodySchema } },
     async (request, reply) => {
       const owner = await requireCardOwner(request, reply, request.params.cardId);
@@ -33,12 +34,22 @@ export default async function shareSessionsRoutes(app: FastifyInstance) {
 
       const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
 
-      const sessionResult = await query<ShareSessionRow>(
-        `insert into share_session (card_id, channel, scoped_field_ids, expires_at)
-         values ($1, $2, $3, $4) returning *`,
-        [owner.card.id, channel, scopedFieldIds, expiresAt],
-      );
-      const session = sessionResult.rows[0];
+      const session = await withTransaction(async (client) => {
+        const sessionResult = await client.query<ShareSessionRow>(
+          `insert into share_session (tenant_id, card_id, channel, scoped_field_ids, expires_at)
+           values ($1, $2, $3, $4, $5) returning *`,
+          [owner.card.tenant_id, owner.card.id, channel, scopedFieldIds, expiresAt],
+        );
+        const row = sessionResult.rows[0];
+        await emitEvent(client, {
+          tenantId: row.tenant_id,
+          type: "share_session.created",
+          aggregateType: "share_session",
+          aggregateId: row.id,
+          payload: { cardId: row.card_id, channel: row.channel, scopedFieldCount: scopedFieldIds.length },
+        });
+        return row;
+      });
 
       reply.code(201).send({
         sessionId: session.id,
@@ -49,7 +60,7 @@ export default async function shareSessionsRoutes(app: FastifyInstance) {
   );
 
   app.get<{ Params: { sessionId: string } }>(
-    "/api/share-sessions/:sessionId",
+    "/api/v1/share-sessions/:sessionId",
     { schema: { params: sessionIdParamsSchema } },
     async (request, reply) => {
       const sessionResult = await query<ShareSessionRow>(

@@ -5,7 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { query } from "../db.js";
 
 export default async function demoRoutes(app: FastifyInstance) {
-  app.get("/api/demo/personas", async (_request, reply) => {
+  app.get("/api/v1/demo/personas", async (_request, reply) => {
     const result = await query<{
       display_name: string;
       headline: string | null;

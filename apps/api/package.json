@@ -11,17 +11,18 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "fastify": "^5.1.0",
     "@fastify/cors": "^10.0.1",
-    "pg": "^8.13.1",
-    "nanoid": "^5.0.9"
+    "@fastify/swagger": "^9.9.0",
+    "fastify": "^5.1.0",
+    "nanoid": "^5.0.9",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
     "@types/pg": "^8.11.10",
-    "typescript": "^5.7.2",
+    "dotenv": "^16.4.7",
     "tsx": "^4.19.2",
-    "vitest": "^2.1.8",
-    "dotenv": "^16.4.7"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }

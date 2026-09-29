@@ -22,7 +22,7 @@ describe("GET /api/demo/personas", () => {
     vi.stubEnv("DEMO_MODE", "");
     const app = await buildApp();
 
-    const res = await app.inject({ method: "GET", url: "/api/demo/personas" });
+    const res = await app.inject({ method: "GET", url: "/api/v1/demo/personas" });
 
     expect(res.statusCode).toBe(404);
     await app.close();
@@ -34,12 +34,12 @@ describe("GET /api/demo/personas", () => {
 
     const created = await app.inject({
       method: "POST",
-      url: "/api/cards",
+      url: "/api/v1/cards",
       payload: { displayName: "Demo Person", headline: "Tester", fields: [] },
     });
     expect(created.statusCode).toBe(201);
 
-    const res = await app.inject({ method: "GET", url: "/api/demo/personas" });
+    const res = await app.inject({ method: "GET", url: "/api/v1/demo/personas" });
 
     expect(res.statusCode).toBe(200);
     const body = res.json();
@@ -54,7 +54,8 @@ describe("GET /api/demo/personas", () => {
 describe("seeded demo tokens", () => {
   async function seededPerson() {
     await pool.query(
-      "INSERT INTO person (display_name, edit_token) VALUES ('Mara Demo', 'demo-mara-token')",
+      `WITH t AS (INSERT INTO tenant (kind) VALUES ('personal') RETURNING id)
+       INSERT INTO person (tenant_id, display_name, edit_token) SELECT id, 'Mara Demo', 'demo-mara-token' FROM t`,
     );
   }
 
@@ -64,7 +65,7 @@ describe("seeded demo tokens", () => {
     const app = await buildApp();
     const res = await app.inject({
       method: "GET",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": "demo-mara-token" },
     });
     expect(res.statusCode).toBe(403);
@@ -77,7 +78,7 @@ describe("seeded demo tokens", () => {
     const app = await buildApp();
     const res = await app.inject({
       method: "GET",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": "demo-mara-token" },
     });
     expect(res.statusCode).toBe(200);

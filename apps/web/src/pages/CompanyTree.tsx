@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getOrgTree, getStoredAuth, updateContact } from "../api";
 import type { OrgTree, OrgTreeNode } from "../types";
+import { t } from "../i18n";
 
 /** Distinct from "" so choosing it actually fires a change off the placeholder option. */
 const NO_MANAGER = "__none__";
@@ -46,13 +47,13 @@ function TreeBranch({
     <li className="org-node">
       <div className="org-node-body">
         <Link to={`/contacts/${node.contactId}`} className="contact-name">
-          {node.subject?.displayName ?? "(unknown)"}
+          {node.subject?.displayName ?? t("common.unknownPerson")}
         </Link>
         {node.subject?.headline && (
           <span className="contact-headline">{node.subject.headline}</span>
         )}
         <label className="org-manager">
-          <span className="muted-text">Reports to</span>
+          <span className="muted-text">{t("tree.reportsTo")}</span>
           <select
             value=""
             disabled={busyId === node.contactId}
@@ -61,11 +62,11 @@ function TreeBranch({
               onSetManager(node.contactId, e.target.value === NO_MANAGER ? null : e.target.value);
             }}
           >
-            <option value="">— change —</option>
-            <option value={NO_MANAGER}>Nobody (top level)</option>
+            <option value="">{t("tree.change")}</option>
+            <option value={NO_MANAGER}>{t("tree.nobody")}</option>
             {options.map((o) => (
               <option key={o.contactId} value={o.contactId}>
-                {o.subject?.displayName ?? "(unknown)"}
+                {o.subject?.displayName ?? t("common.unknownPerson")}
               </option>
             ))}
           </select>
@@ -131,7 +132,7 @@ export default function CompanyTree() {
       await updateContact(contactId, auth.editToken, { reportsToContactId: managerId });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update the reporting line");
+      setError(err instanceof Error ? err.message : t("tree.updateFailed"));
     } finally {
       setBusyId(null);
     }
@@ -141,40 +142,33 @@ export default function CompanyTree() {
   if (error && !tree) {
     return (
       <div className="page">
-        <Link to="/companies">← Companies</Link>
+        <Link to="/companies">{t("tree.back")}</Link>
         <p className="error-text">{error}</p>
       </div>
     );
   }
-  if (!tree) return <div className="page"><p>Loading…</p></div>;
+  if (!tree) return <div className="page"><p>{t("common.loading")}</p></div>;
 
   const all = flatten(tree.roots);
 
   return (
     <div className="page">
-      <Link to="/companies">← Companies</Link>
+      <Link to="/companies">{t("tree.back")}</Link>
       <h1>{tree.company.name}</h1>
       {tree.company.domain && <p className="contact-headline">{tree.company.domain}</p>}
       {tree.company.enrichmentSource === "derived" && (
         <p className="muted-text">
-          <span className="inferred-badge">inferred</span> This company was derived from an email
-          domain rather than entered by hand.
+          <span className="inferred-badge">{t("common.inferred")}</span> {t("tree.derived")}
         </p>
       )}
 
       {error && <p className="error-text">{error}</p>}
 
       {all.length === 0 ? (
-        <p className="muted-text">
-          You have not captured anyone at {tree.company.name}. That is the whole answer — this
-          tree only ever shows your own contacts, so it stays empty rather than being filled in
-          with other people's.
-        </p>
+        <p className="muted-text">{t("tree.empty", { company: tree.company.name })}</p>
       ) : (
         <>
-          <p className="muted-text">
-            {all.length} of your contacts. Reporting lines are private to you.
-          </p>
+          <p className="muted-text">{t("tree.summary", { count: all.length })}</p>
           <ul className="org-tree">
             {tree.roots.map((node) => (
               <TreeBranch

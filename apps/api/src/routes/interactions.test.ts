@@ -19,7 +19,7 @@ afterAll(async () => {
 async function createPerson(displayName: string) {
   const res = await app.inject({
     method: "POST",
-    url: "/api/cards",
+    url: "/api/v1/cards",
     payload: { displayName, fields: [] },
   });
   const body = res.json();
@@ -29,7 +29,7 @@ async function createPerson(displayName: string) {
 async function shareSession(cardId: string, editToken: string) {
   const res = await app.inject({
     method: "POST",
-    url: `/api/cards/${cardId}/share-sessions`,
+    url: `/api/v1/cards/${cardId}/share-sessions`,
     headers: { "x-edit-token": editToken },
     payload: { channel: "link" },
   });
@@ -44,7 +44,7 @@ async function save(
 ) {
   const res = await app.inject({
     method: "POST",
-    url: "/api/contacts",
+    url: "/api/v1/contacts",
     headers: { "x-edit-token": owner.editToken },
     payload: { id, shareSessionId: await shareSession(subject.cardId, subject.editToken), captureSource: "card_share" },
   });
@@ -55,7 +55,7 @@ async function save(
 function log(token: string, contactId: string, payload: Record<string, unknown>) {
   return app.inject({
     method: "POST",
-    url: `/api/contacts/${contactId}/interactions`,
+    url: `/api/v1/contacts/${contactId}/interactions`,
     headers: { "x-edit-token": token },
     payload,
   });
@@ -64,7 +64,7 @@ function log(token: string, contactId: string, payload: Record<string, unknown>)
 async function detail(token: string, contactId: string) {
   const res = await app.inject({
     method: "GET",
-    url: `/api/contacts/${contactId}`,
+    url: `/api/v1/contacts/${contactId}`,
     headers: { "x-edit-token": token },
   });
   return res.json() as {
@@ -155,7 +155,7 @@ describe("POST /api/contacts/:contactId/interactions", () => {
 
     const suggestions = await app.inject({
       method: "GET",
-      url: "/api/contacts/reconnection-suggestions",
+      url: "/api/v1/contacts/reconnection-suggestions",
       headers: { "x-edit-token": b.editToken },
     });
     expect(suggestions.json().map((s: { contactId: string }) => s.contactId)).toContain(contactId);
@@ -183,7 +183,7 @@ describe("private notes stay with their author", () => {
 
     await log(a.editToken, aAboutB, { channel: "note", summary: "ALICE-ONLY: Bob seemed hesitant" });
     await log(a.editToken, aAboutC, { channel: "note", summary: "Carol follow-up" });
-    const aBefore = await app.inject({ method: "GET", url: "/api/contacts", headers: { "x-edit-token": a.editToken } });
+    const aBefore = await app.inject({ method: "GET", url: "/api/v1/contacts", headers: { "x-edit-token": a.editToken } });
     const aDetailBefore = await detail(a.editToken, aAboutB);
 
     // Bob writes a lot about Alice. None of it may reach Alice or shift her view.
@@ -203,7 +203,7 @@ describe("private notes stay with their author", () => {
     expect(aDetail.connectionStrength).toBe(aDetailBefore.connectionStrength);
     expect(aDetail.lastInteractionAt).toBe(aDetailBefore.lastInteractionAt);
 
-    const aAfter = await app.inject({ method: "GET", url: "/api/contacts", headers: { "x-edit-token": a.editToken } });
+    const aAfter = await app.inject({ method: "GET", url: "/api/v1/contacts", headers: { "x-edit-token": a.editToken } });
     expect(aAfter.json().map((x: { id: string }) => x.id)).toEqual(aBefore.json().map((x: { id: string }) => x.id));
   });
 });
@@ -217,8 +217,8 @@ describe("POST /api/contacts idempotency and expiry", () => {
     const payload = { id, shareSessionId: sessionId, captureSource: "card_share" };
     const headers = { "x-edit-token": b.editToken };
 
-    const first = await app.inject({ method: "POST", url: "/api/contacts", headers, payload });
-    const replay = await app.inject({ method: "POST", url: "/api/contacts", headers, payload });
+    const first = await app.inject({ method: "POST", url: "/api/v1/contacts", headers, payload });
+    const replay = await app.inject({ method: "POST", url: "/api/v1/contacts", headers, payload });
     expect(first.statusCode).toBe(201);
     expect(replay.statusCode).toBe(200);
     expect(replay.json().id).toBe(id);
@@ -236,7 +236,7 @@ describe("POST /api/contacts idempotency and expiry", () => {
 
     const res = await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": b.editToken },
       payload: { shareSessionId: sessionId, captureSource: "card_share" },
     });

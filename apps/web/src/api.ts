@@ -104,7 +104,7 @@ export async function createCard(
   headline: string,
   fields: NewFieldInput[],
 ): Promise<{ person: OwnerPerson; card: OwnerCard; editToken: string }> {
-  const res = await fetch("/api/cards", {
+  const res = await fetch("/api/v1/cards", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ displayName, headline, fields }),
@@ -116,7 +116,7 @@ export async function getOwnerCard(
   cardId: string,
   editToken: string,
 ): Promise<{ person: OwnerPerson; card: OwnerCard }> {
-  const res = await fetch(`/api/cards/${cardId}`, {
+  const res = await fetch(`/api/v1/cards/${cardId}`, {
     headers: { "x-edit-token": editToken },
   });
   return handle(res);
@@ -127,7 +127,7 @@ export async function addField(
   editToken: string,
   field: NewFieldInput,
 ): Promise<OwnerField> {
-  const res = await fetch(`/api/cards/${cardId}/fields`, {
+  const res = await fetch(`/api/v1/cards/${cardId}/fields`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-edit-token": editToken },
     body: JSON.stringify(field),
@@ -141,7 +141,7 @@ export async function updateField(
   editToken: string,
   patch: Partial<NewFieldInput & { displayOrder: number }>,
 ): Promise<OwnerField> {
-  const res = await fetch(`/api/cards/${cardId}/fields/${fieldId}`, {
+  const res = await fetch(`/api/v1/cards/${cardId}/fields/${fieldId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", "x-edit-token": editToken },
     body: JSON.stringify(patch),
@@ -150,7 +150,7 @@ export async function updateField(
 }
 
 export async function deleteField(cardId: string, fieldId: string, editToken: string): Promise<void> {
-  const res = await fetch(`/api/cards/${cardId}/fields/${fieldId}`, {
+  const res = await fetch(`/api/v1/cards/${cardId}/fields/${fieldId}`, {
     method: "DELETE",
     headers: { "x-edit-token": editToken },
   });
@@ -162,7 +162,7 @@ export async function createShareSession(
   editToken: string,
   channel: "link" | "qr",
 ): Promise<{ sessionId: string; url: string; expiresAt: string }> {
-  const res = await fetch(`/api/cards/${cardId}/share-sessions`, {
+  const res = await fetch(`/api/v1/cards/${cardId}/share-sessions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-edit-token": editToken },
     body: JSON.stringify({ channel }),
@@ -171,12 +171,12 @@ export async function createShareSession(
 }
 
 export async function getShareSession(sessionId: string): Promise<RecipientCardView> {
-  const res = await fetch(`/api/share-sessions/${sessionId}`);
+  const res = await fetch(`/api/v1/share-sessions/${sessionId}`);
   return handle(res);
 }
 
 export async function requestField(sessionId: string, fieldId: string): Promise<FieldRequest> {
-  const res = await fetch(`/api/share-sessions/${sessionId}/field-requests`, {
+  const res = await fetch(`/api/v1/share-sessions/${sessionId}/field-requests`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ fieldId }),
@@ -185,7 +185,7 @@ export async function requestField(sessionId: string, fieldId: string): Promise<
 }
 
 export async function listFieldRequests(cardId: string, editToken: string): Promise<FieldRequest[]> {
-  const res = await fetch(`/api/cards/${cardId}/field-requests`, {
+  const res = await fetch(`/api/v1/cards/${cardId}/field-requests`, {
     headers: { "x-edit-token": editToken },
   });
   return handle(res);
@@ -196,7 +196,7 @@ export async function respondFieldRequest(
   editToken: string,
   approve: boolean,
 ): Promise<FieldRequest> {
-  const res = await fetch(`/api/field-requests/${requestId}/respond`, {
+  const res = await fetch(`/api/v1/field-requests/${requestId}/respond`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-edit-token": editToken },
     body: JSON.stringify({ approve }),
@@ -210,7 +210,7 @@ export async function saveContact(
   captureContext?: string,
 ): Promise<{ id: string }> {
   return postOrQueue(
-    "/api/contacts",
+    "/api/v1/contacts",
     editToken,
     (id) => ({ id, shareSessionId, captureSource: "card_share", captureContext }),
     (id) => ({ id }),
@@ -219,12 +219,12 @@ export async function saveContact(
 }
 
 export async function listContacts(editToken: string): Promise<Contact[]> {
-  const res = await fetch("/api/contacts", { headers: { "x-edit-token": editToken } });
+  const res = await fetch("/api/v1/contacts", { headers: { "x-edit-token": editToken } });
   return handle(res);
 }
 
 export async function getContact(contactId: string, editToken: string): Promise<ContactDetail> {
-  const res = await fetch(`/api/contacts/${contactId}`, {
+  const res = await fetch(`/api/v1/contacts/${contactId}`, {
     headers: { "x-edit-token": editToken },
   });
   return handle(res);
@@ -245,7 +245,7 @@ export async function logInteraction(
 }> {
   const when = occurredAt ?? new Date().toISOString();
   return postOrQueue(
-    `/api/contacts/${contactId}/interactions`,
+    `/api/v1/contacts/${contactId}/interactions`,
     editToken,
     (id) => ({ id, channel, summary, occurredAt: when }),
     (id) => ({
@@ -260,19 +260,19 @@ export async function logInteraction(
 }
 
 export async function listMyCompanies(editToken: string): Promise<MyCompany[]> {
-  const res = await fetch("/api/companies/mine", { headers: { "x-edit-token": editToken } });
+  const res = await fetch("/api/v1/companies/mine", { headers: { "x-edit-token": editToken } });
   return handle(res);
 }
 
 export async function searchCompanies(editToken: string, q: string): Promise<Company[]> {
-  const res = await fetch(`/api/companies?q=${encodeURIComponent(q)}`, {
+  const res = await fetch(`/api/v1/companies?q=${encodeURIComponent(q)}`, {
     headers: { "x-edit-token": editToken },
   });
   return handle(res);
 }
 
 export async function getOrgTree(companyId: string, editToken: string): Promise<OrgTree> {
-  const res = await fetch(`/api/companies/${companyId}/tree`, {
+  const res = await fetch(`/api/v1/companies/${companyId}/tree`, {
     headers: { "x-edit-token": editToken },
   });
   return handle(res);
@@ -283,7 +283,7 @@ export async function updateContact(
   editToken: string,
   patch: { companyProfileId?: string | null; reportsToContactId?: string | null },
 ): Promise<{ id: string; companyProfileId: string | null; reportsToContactId: string | null }> {
-  const res = await fetch(`/api/contacts/${contactId}`, {
+  const res = await fetch(`/api/v1/contacts/${contactId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", "x-edit-token": editToken },
     body: JSON.stringify(patch),
@@ -300,7 +300,7 @@ export interface DemoPersona {
 
 /** Returns null when demo mode is off — the route is not registered, so it 404s. */
 export async function getDemoPersonas(): Promise<DemoPersona[] | null> {
-  const res = await fetch("/api/demo/personas");
+  const res = await fetch("/api/v1/demo/personas");
   if (res.status === 404) return null;
   return handle(res);
 }
@@ -308,7 +308,7 @@ export async function getDemoPersonas(): Promise<DemoPersona[] | null> {
 export async function getReconnectionSuggestions(
   editToken: string,
 ): Promise<ReconnectionSuggestion[]> {
-  const res = await fetch("/api/contacts/reconnection-suggestions", {
+  const res = await fetch("/api/v1/contacts/reconnection-suggestions", {
     headers: { "x-edit-token": editToken },
   });
   return handle(res);

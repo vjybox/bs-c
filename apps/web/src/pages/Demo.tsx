@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getDemoPersonas, setStoredAuth, type DemoPersona } from "../api";
+import { code, t, tRich } from "../i18n";
 
 type LoadState = "loading" | "ready" | "off" | "error";
 
@@ -39,37 +40,29 @@ export default function Demo() {
 
   return (
     <div className="page">
-      <Link to="/">← Create your own card</Link>
-      <h1>Demo sign-in</h1>
+      <Link to="/">{t("demo.back")}</Link>
+      <h1>{t("demo.title")}</h1>
 
-      {state === "loading" && <p>Loading…</p>}
+      {state === "loading" && <p>{t("common.loading")}</p>}
 
       {state === "off" && (
-        <p className="muted-text">
-          Demo mode is off. Start the stack with <code>docker compose up --build</code>, which sets{" "}
-          <code>DEMO_MODE=true</code> and seeds sample data automatically.
-        </p>
+        <p className="muted-text">{tRich("demo.off", { code })}</p>
       )}
 
       {state === "error" && <p className="error-text">{error}</p>}
 
       {state === "ready" && personas.length === 0 && (
-        <p className="muted-text">
-          No seeded people yet — run <code>npm run seed --workspace=apps/api</code>.
-        </p>
+        <p className="muted-text">{tRich("demo.empty", { code })}</p>
       )}
 
       {state === "ready" && personas.length > 0 && (
         <>
-          <p className="muted-text">
-            Pick someone to sign in as. Mara has the most data — four contacts, a pending field
-            request, and a relationship that has gone quiet.
-          </p>
+          <p className="muted-text">{t("demo.intro")}</p>
           <ul className="contact-list">
             {personas.map((p) => (
               <li key={p.cardId} className="contact-row">
                 <button type="button" className="primary-btn" onClick={() => signInAs(p)}>
-                  Sign in as {p.displayName}
+                  {t("demo.signInAs", { name: p.displayName })}
                 </button>
                 {p.headline && <span className="contact-headline">{p.headline}</span>}
               </li>

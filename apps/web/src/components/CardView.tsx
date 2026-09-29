@@ -1,4 +1,5 @@
 import type { FieldVisibility } from "../types";
+import { t } from "../i18n";
 
 export interface CardViewField {
   id: string;
@@ -16,18 +17,11 @@ interface CardViewProps {
   onRequestField?: (fieldId: string) => void;
 }
 
-const VISIBILITY_LABEL: Record<FieldVisibility, string> = {
-  public: "Public",
-  link_only: "Link only",
-  request_required: "On request",
-  hidden: "Hidden",
-};
-
 export default function CardView({ displayName, headline, fields, onRequestField }: CardViewProps) {
   return (
     <div className="card-view">
       <div className="card-view-header">
-        <div className="card-view-name">{displayName || "Your name"}</div>
+        <div className="card-view-name">{displayName || t("card.yourName")}</div>
         {headline ? <div className="card-view-headline">{headline}</div> : null}
       </div>
       <ul className="card-view-fields">
@@ -43,17 +37,17 @@ export default function CardView({ displayName, headline, fields, onRequestField
                 disabled={field.requested}
                 onClick={() => onRequestField?.(field.id)}
               >
-                {field.requested ? "Requested" : "Request access"}
+                {field.requested ? t("card.requested") : t("card.requestAccess")}
               </button>
             ) : null}
             {field.visibility ? (
               <span className={`card-view-visibility-badge badge-${field.visibility}`}>
-                {VISIBILITY_LABEL[field.visibility]}
+                {t(`visibility.${field.visibility}`)}
               </span>
             ) : null}
           </li>
         ))}
-        {fields.length === 0 ? <li className="card-view-empty">No fields yet.</li> : null}
+        {fields.length === 0 ? <li className="card-view-empty">{t("card.noFields")}</li> : null}
       </ul>
     </div>
   );

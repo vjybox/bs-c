@@ -10,6 +10,7 @@ import {
 } from "../api";
 import CardView from "../components/CardView";
 import ShareSheet from "../components/ShareSheet";
+import { t } from "../i18n";
 import type { FieldType, FieldVisibility, OwnerCard, OwnerField, OwnerPerson } from "../types";
 
 const FIELD_TYPES: FieldType[] = ["text", "phone", "email", "url", "social", "custom"];
@@ -38,7 +39,7 @@ export default function Editor() {
         setPerson(res.person);
         setCard(res.card);
       })
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load card"));
+      .catch((err) => setError(err instanceof Error ? err.message : t("editor.loadFailed")));
   }, []);
 
   if (!auth) return null;
@@ -55,7 +56,7 @@ export default function Editor() {
       const updated = await updateField(auth.cardId, field.id, auth.editToken, { visibility });
       refreshField(updated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update field");
+      setError(err instanceof Error ? err.message : t("editor.updateFailed"));
     }
   }
 
@@ -65,7 +66,7 @@ export default function Editor() {
       const updated = await updateField(auth.cardId, field.id, auth.editToken, { value });
       refreshField(updated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update field");
+      setError(err instanceof Error ? err.message : t("editor.updateFailed"));
     }
   }
 
@@ -75,7 +76,7 @@ export default function Editor() {
       await deleteField(auth.cardId, fieldId, auth.editToken);
       setCard((prev) => (prev ? { ...prev, fields: prev.fields.filter((f) => f.id !== fieldId) } : prev));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete field");
+      setError(err instanceof Error ? err.message : t("editor.deleteFailed"));
     }
   }
 
@@ -92,7 +93,7 @@ export default function Editor() {
       setNewLabel("");
       setNewValue("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add field");
+      setError(err instanceof Error ? err.message : t("editor.addFailed"));
     }
   }
 
@@ -104,16 +105,16 @@ export default function Editor() {
   return (
     <div className="page editor-page">
       <div className="editor-toolbar">
-        <h1>Edit your card</h1>
+        <h1>{t("editor.title")}</h1>
         <div className="editor-toolbar-actions">
-          <Link to="/editor/requests">Field requests</Link>
-          <Link to="/contacts">My Contacts</Link>
-        <Link to="/companies">Companies</Link>
+          <Link to="/editor/requests">{t("editor.fieldRequests")}</Link>
+          <Link to="/contacts">{t("editor.contacts")}</Link>
+          <Link to="/companies">{t("editor.companies")}</Link>
           <button type="button" onClick={() => setShowShare(true)} className="primary-btn">
-            Share
+            {t("editor.share")}
           </button>
           <button type="button" onClick={handleSignOut}>
-            Sign out
+            {t("editor.signOut")}
           </button>
         </div>
       </div>
@@ -132,45 +133,45 @@ export default function Editor() {
               >
                 {VISIBILITIES.map((v) => (
                   <option key={v} value={v}>
-                    {v}
+                    {t(`visibility.${v}`)}
                   </option>
                 ))}
               </select>
               <button type="button" onClick={() => handleDelete(field.id)}>
-                Remove
+                {t("common.remove")}
               </button>
             </div>
           ))}
 
-          <h2>Add field</h2>
+          <h2>{t("editor.addField")}</h2>
           <div className="field-row">
             <select value={newType} onChange={(e) => setNewType(e.target.value as FieldType)}>
-              {FIELD_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              {FIELD_TYPES.map((ft) => (
+                <option key={ft} value={ft}>
+                  {t(`fieldType.${ft}`)}
                 </option>
               ))}
             </select>
-            <input placeholder="Label" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} />
-            <input placeholder="Value" value={newValue} onChange={(e) => setNewValue(e.target.value)} />
+            <input placeholder={t("common.label")} value={newLabel} onChange={(e) => setNewLabel(e.target.value)} />
+            <input placeholder={t("common.value")} value={newValue} onChange={(e) => setNewValue(e.target.value)} />
             <select
               value={newVisibility}
               onChange={(e) => setNewVisibility(e.target.value as FieldVisibility)}
             >
               {VISIBILITIES.map((v) => (
                 <option key={v} value={v}>
-                  {v}
+                  {t(`visibility.${v}`)}
                 </option>
               ))}
             </select>
             <button type="button" onClick={handleAddField}>
-              Add
+              {t("editor.add")}
             </button>
           </div>
         </div>
 
         <div className="editor-preview">
-          <h2>Live preview</h2>
+          <h2>{t("editor.preview")}</h2>
           <CardView
             displayName={person?.displayName ?? ""}
             headline={person?.headline}

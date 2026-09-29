@@ -27,7 +27,7 @@ to look at: six contacts with different relationship strengths, an interaction h
 back months, a pending field request to approve, and one relationship that has gone quiet so
 reconnection suggestions actually fire.
 
-Demo sign-in is gated: `GET /api/demo/personas` hands out edit tokens, so it is only registered
+Demo sign-in is gated: `GET /api/v1/demo/personas` hands out edit tokens, so it is only registered
 when `DEMO_MODE=true`. With the flag off the route does not exist and returns 404.
 
 ### Schema changes
@@ -113,7 +113,7 @@ Only the web port is published. Postgres and the API are reachable only from ins
 network, which is why the default database password is harmless — nothing outside the stack can
 connect to it.
 
-**Demo mode is off by default.** Turned on, `GET /api/demo/personas` hands out edit tokens —
+**Demo mode is off by default.** Turned on, `GET /api/v1/demo/personas` hands out edit tokens —
 full access to every demo identity — to anyone who can reach the app. On a home LAN, for a
 demo, that is the point. If this NAS is reachable from anywhere else, leave it off.
 
@@ -199,6 +199,20 @@ The build also switches to `HashRouter` (no server to rewrite unknown paths) and
 asset paths, so `dist-demo/` can be served from any static host or subdirectory. A banner marks
 it as a demo. To refresh the fixtures after changing the seed or an API response shape, run the
 API against a seeded database and re-capture; `demo-fixtures.json` records its `capturedAt`.
+
+## API surface and platform hooks
+
+- **Versioned REST.** Every route is under `/api/v1/`; the OpenAPI 3 document is served at
+  `GET /api/v1/openapi.json`, generated from the same JSON schemas the routes validate with.
+- **Tenancy.** Every person has a personal tenant, and every tenant-scoped row carries a
+  `tenant_id` (ADR-0001). Row-level security policies are not enabled yet.
+- **Domain events.** Each successful write also writes an `outbox_event` row in the same
+  transaction (ADR-0004, ADR-0007). Payloads carry ids only — no field values or notes. Nothing
+  consumes them yet; they are the hook automations, webhooks and AI context will read.
+- **Architecture fitness tests** (`apps/api/src/architecture.test.ts`,
+  `apps/web/src/i18n/i18n.test.tsx`) fail if a table lacks `tenant_id`, a route is unversioned
+  or undocumented, a write path declares no event, an event leaks private content, or a page
+  contains literal UI text instead of a catalogue key (`apps/web/src/i18n/en.ts`).
 
 ## Running tests
 

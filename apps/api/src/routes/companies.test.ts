@@ -21,7 +21,7 @@ async function createPerson(displayName: string, email?: string) {
     : [];
   const res = await app.inject({
     method: "POST",
-    url: "/api/cards",
+    url: "/api/v1/cards",
     payload: { displayName, headline: `${displayName} headline`, fields },
   });
   expect(res.statusCode).toBe(201);
@@ -36,13 +36,13 @@ async function saveContact(
 ) {
   const session = await app.inject({
     method: "POST",
-    url: `/api/cards/${subject.cardId}/share-sessions`,
+    url: `/api/v1/cards/${subject.cardId}/share-sessions`,
     headers: { "x-edit-token": subject.editToken },
     payload: { channel: "link" },
   });
   const res = await app.inject({
     method: "POST",
-    url: "/api/contacts",
+    url: "/api/v1/contacts",
     headers: { "x-edit-token": owner.editToken },
     payload: { shareSessionId: session.json().sessionId, captureSource: "card_share" },
   });
@@ -57,7 +57,7 @@ async function patchContact(
 ) {
   return app.inject({
     method: "PATCH",
-    url: `/api/contacts/${contactId}`,
+    url: `/api/v1/contacts/${contactId}`,
     headers: { "x-edit-token": token },
     payload: body,
   });
@@ -73,7 +73,7 @@ describe("company derivation from a public email domain", () => {
 
     const res = await app.inject({
       method: "GET",
-      url: "/api/companies/mine",
+      url: "/api/v1/companies/mine",
       headers: { "x-edit-token": owner.editToken },
     });
     const companies = res.json();
@@ -119,12 +119,12 @@ describe("GET /api/companies/:companyId/tree — rulebook 9.3 and 9.4", () => {
 
     const aliceTree = await app.inject({
       method: "GET",
-      url: `/api/companies/${companyId}/tree`,
+      url: `/api/v1/companies/${companyId}/tree`,
       headers: { "x-edit-token": alice.editToken },
     });
     const bobTree = await app.inject({
       method: "GET",
-      url: `/api/companies/${companyId}/tree`,
+      url: `/api/v1/companies/${companyId}/tree`,
       headers: { "x-edit-token": bob.editToken },
     });
 
@@ -141,7 +141,7 @@ describe("GET /api/companies/:companyId/tree — rulebook 9.3 and 9.4", () => {
 
     const res = await app.inject({
       method: "GET",
-      url: `/api/companies/${bobContact.companyProfileId}/tree`,
+      url: `/api/v1/companies/${bobContact.companyProfileId}/tree`,
       headers: { "x-edit-token": alice.editToken },
     });
     expect(res.statusCode).toBe(200);
@@ -163,7 +163,7 @@ describe("GET /api/companies/:companyId/tree — rulebook 9.3 and 9.4", () => {
 
     const tree = await app.inject({
       method: "GET",
-      url: `/api/companies/${bossContact.companyProfileId}/tree`,
+      url: `/api/v1/companies/${bossContact.companyProfileId}/tree`,
       headers: { "x-edit-token": owner.editToken },
     });
     const roots = tree.json().roots;
@@ -262,7 +262,7 @@ describe("rulebook 9.6 — an employer change drops cross-company reporting line
     // Mid leaves for another company.
     const other = await app.inject({
       method: "POST",
-      url: "/api/companies",
+      url: "/api/v1/companies",
       headers: { "x-edit-token": owner.editToken },
       payload: { name: "Other Co", domain: "other.test" },
     });
@@ -278,7 +278,7 @@ describe("rulebook 9.6 — an employer change drops cross-company reporting line
     // ...and so is Report's line up to Mid, which would now span two companies.
     const detail = await app.inject({
       method: "GET",
-      url: `/api/contacts/${reportContact.id}`,
+      url: `/api/v1/contacts/${reportContact.id}`,
       headers: { "x-edit-token": owner.editToken },
     });
     expect(detail.json().reportsToContactId).toBeNull();
@@ -294,7 +294,7 @@ describe("GET /api/companies — global firmographic search", () => {
 
     const res = await app.inject({
       method: "GET",
-      url: "/api/companies?q=northwind",
+      url: "/api/v1/companies?q=northwind",
       headers: { "x-edit-token": alice.editToken },
     });
     expect(res.statusCode).toBe(200);
@@ -306,7 +306,7 @@ describe("GET /api/companies — global firmographic search", () => {
   });
 
   it("requires a token", async () => {
-    const res = await app.inject({ method: "GET", url: "/api/companies" });
+    const res = await app.inject({ method: "GET", url: "/api/v1/companies" });
     expect(res.statusCode).toBe(401);
   });
 });
@@ -319,7 +319,7 @@ describe("PATCH /api/companies/:companyId", () => {
 
     const res = await app.inject({
       method: "PATCH",
-      url: `/api/companies/${contact.companyProfileId}`,
+      url: `/api/v1/companies/${contact.companyProfileId}`,
       headers: { "x-edit-token": bob.editToken },
       payload: { name: "Hijacked Inc" },
     });

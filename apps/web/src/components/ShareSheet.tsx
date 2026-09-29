@@ -3,6 +3,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { createShareSession } from "../api";
 import { buildVCard, publicFieldsOf } from "../vcard";
 import type { OwnerCard, OwnerPerson } from "../types";
+import { b, t, tRich } from "../i18n";
 
 interface ShareSheetProps {
   cardId: string;
@@ -51,20 +52,18 @@ export default function ShareSheet({ cardId, editToken, person, card, onClose }:
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Share your card</h2>
+        <h2>{t("share.title")}</h2>
 
         {url ? (
           <>
             <div className="qr-wrap">
               <QRCodeSVG value={url} size={200} />
             </div>
-            <p className="muted-text">
-              Full card. Expires automatically, and you can revoke it.
-            </p>
+            <p className="muted-text">{t("share.fullCard")}</p>
             <div className="share-link-row">
               <input type="text" readOnly value={url} />
               <button type="button" onClick={copyLink}>
-                {copied ? "Copied!" : "Copy link"}
+                {copied ? t("share.copied") : t("share.copyLink")}
               </button>
             </div>
           </>
@@ -74,24 +73,16 @@ export default function ShareSheet({ cardId, editToken, person, card, onClose }:
               <QRCodeSVG value={vcard} size={200} />
             </div>
             <p className="offline-note">
-              <strong>Offline — sharing public details only.</strong> This code carries your{" "}
-              {publicFields.length} public {publicFields.length === 1 ? "field" : "fields"} directly,
-              so it scans with no network on either phone.
-              {gatedCount > 0 && (
-                <>
-                  {" "}
-                  Your {gatedCount} other {gatedCount === 1 ? "field is" : "fields are"} not
-                  included — those need a link, which needs a connection.
-                </>
-              )}
+              {tRich("share.offlineLead", { b })} {t("share.offlinePublic", { count: publicFields.length })}
+              {gatedCount > 0 && <> {t("share.offlineGated", { count: gatedCount })}</>}
             </p>
           </>
         ) : (
-          <p>Generating link…</p>
+          <p>{t("share.generating")}</p>
         )}
 
         <button type="button" className="modal-close" onClick={onClose}>
-          Close
+          {t("common.close")}
         </button>
       </div>
     </div>

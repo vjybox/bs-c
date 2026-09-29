@@ -4,6 +4,7 @@ import { BrowserRouter, HashRouter } from "react-router-dom";
 import App from "./App";
 import { startQueueSync } from "./offline-queue";
 import "./index.css";
+import { b, tRich } from "./i18n";
 
 // The static demo build has no server to rewrite unknown paths onto index.html, so it
 // routes on the hash instead. Everything else uses real paths.
@@ -25,10 +26,7 @@ if (!isDemo) startQueueSync();
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     {isDemo && (
-      <div className="demo-banner">
-        <strong>Demo</strong> — sample data running entirely in your browser. Changes are not
-        saved and reset when you reload. This is not a live deployment.
-      </div>
+      <div className="demo-banner">{tRich("demo.banner", { b })}</div>
     )}
     <Router>
       <App />

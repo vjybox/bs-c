@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getStoredAuth, listFieldRequests, respondFieldRequest } from "../api";
 import type { FieldRequest } from "../types";
+import { t } from "../i18n";
 
 const POLL_INTERVAL_MS = 4000;
 
@@ -23,7 +24,7 @@ export default function Requests() {
         const result = await listFieldRequests(auth!.cardId, auth!.editToken);
         if (!cancelled) setRequests(result);
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load requests");
+        if (!cancelled) setError(err instanceof Error ? err.message : t("requests.loadFailed"));
       }
     }
 
@@ -42,7 +43,7 @@ export default function Requests() {
       const updated = await respondFieldRequest(requestId, auth!.editToken, approve);
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to respond");
+      setError(err instanceof Error ? err.message : t("requests.respondFailed"));
     }
   }
 
@@ -52,22 +53,22 @@ export default function Requests() {
   return (
     <div className="page">
       <p>
-        <Link to="/editor">← Back to editor</Link>
+        <Link to="/editor">{t("common.backToEditor")}</Link>
       </p>
-      <h1>Field requests</h1>
+      <h1>{t("requests.title")}</h1>
       {error ? <p className="error-text">{error}</p> : null}
 
-      <h2>Pending</h2>
-      {pending.length === 0 ? <p>No pending requests.</p> : null}
+      <h2>{t("requests.pending")}</h2>
+      {pending.length === 0 ? <p>{t("requests.none")}</p> : null}
       <ul className="request-list">
         {pending.map((r) => (
           <li key={r.id} className="request-row">
             <span>{r.fieldLabel}</span>
             <button type="button" onClick={() => respond(r.id, true)}>
-              Approve
+              {t("requests.approve")}
             </button>
             <button type="button" onClick={() => respond(r.id, false)}>
-              Deny
+              {t("requests.deny")}
             </button>
           </li>
         ))}
@@ -75,12 +76,12 @@ export default function Requests() {
 
       {resolved.length > 0 ? (
         <>
-          <h2>Resolved</h2>
+          <h2>{t("requests.resolved")}</h2>
           <ul className="request-list">
             {resolved.map((r) => (
               <li key={r.id} className="request-row">
                 <span>{r.fieldLabel}</span>
-                <span className={`status-badge status-${r.status}`}>{r.status}</span>
+                <span className={`status-badge status-${r.status}`}>{t(`requestStatus.${r.status}`)}</span>
               </li>
             ))}
           </ul>

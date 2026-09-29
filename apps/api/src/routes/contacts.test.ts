@@ -18,7 +18,7 @@ afterAll(async () => {
 async function createPerson(displayName: string) {
   const res = await app.inject({
     method: "POST",
-    url: "/api/cards",
+    url: "/api/v1/cards",
     payload: { displayName, headline: "Test headline", fields: [] },
   });
   expect(res.statusCode).toBe(201);
@@ -29,7 +29,7 @@ async function createPerson(displayName: string) {
 async function createShareSession(cardId: string, editToken: string) {
   const res = await app.inject({
     method: "POST",
-    url: `/api/cards/${cardId}/share-sessions`,
+    url: `/api/v1/cards/${cardId}/share-sessions`,
     headers: { "x-edit-token": editToken },
     payload: { channel: "link" },
   });
@@ -45,7 +45,7 @@ describe("POST /api/contacts", () => {
 
     const res = await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": b.editToken },
       payload: { shareSessionId: sessionId, captureSource: "card_share" },
     });
@@ -64,14 +64,14 @@ describe("POST /api/contacts", () => {
 
     await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": b.editToken },
       payload: { shareSessionId: sessionId, captureSource: "card_share" },
     });
 
     const res2 = await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": b.editToken },
       payload: { shareSessionId: sessionId, captureSource: "card_share" },
     });
@@ -81,7 +81,7 @@ describe("POST /api/contacts", () => {
   it("returns 401 when x-edit-token is missing", async () => {
     const res = await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       payload: { captureSource: "manual" },
     });
     expect(res.statusCode).toBe(401);
@@ -91,7 +91,7 @@ describe("POST /api/contacts", () => {
     const a = await createPerson("Alice");
     const res = await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": a.editToken },
       payload: { captureSource: "manual" },
     });
@@ -109,7 +109,7 @@ describe("GET /api/contacts", () => {
     const sessionA = await createShareSession(a.cardId, a.editToken);
     await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": b.editToken },
       payload: { shareSessionId: sessionA, captureSource: "card_share" },
     });
@@ -118,14 +118,14 @@ describe("GET /api/contacts", () => {
     const sessionB = await createShareSession(b.cardId, b.editToken);
     await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": c.editToken },
       payload: { shareSessionId: sessionB, captureSource: "card_share" },
     });
 
     const resB = await app.inject({
       method: "GET",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": b.editToken },
     });
     expect(resB.statusCode).toBe(200);
@@ -135,7 +135,7 @@ describe("GET /api/contacts", () => {
 
     const resC = await app.inject({
       method: "GET",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": c.editToken },
     });
     const cContacts = resC.json();
@@ -153,7 +153,7 @@ describe("GET /api/contacts/:contactId — directional privacy boundary", () => 
     // Bob saves Alice as a contact
     const createRes = await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": b.editToken },
       payload: { shareSessionId: sessionA, captureSource: "card_share" },
     });
@@ -162,7 +162,7 @@ describe("GET /api/contacts/:contactId — directional privacy boundary", () => 
     // Alice (the subject) cannot read Bob's contact record about her
     const res = await app.inject({
       method: "GET",
-      url: `/api/contacts/${contactId}`,
+      url: `/api/v1/contacts/${contactId}`,
       headers: { "x-edit-token": a.editToken },
     });
     expect(res.statusCode).toBe(403);
@@ -175,7 +175,7 @@ describe("GET /api/contacts/:contactId — directional privacy boundary", () => 
 
     const createRes = await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": b.editToken },
       payload: { shareSessionId: sessionA, captureSource: "card_share" },
     });
@@ -183,7 +183,7 @@ describe("GET /api/contacts/:contactId — directional privacy boundary", () => 
 
     const res = await app.inject({
       method: "GET",
-      url: `/api/contacts/${contactId}`,
+      url: `/api/v1/contacts/${contactId}`,
       headers: { "x-edit-token": b.editToken },
     });
     expect(res.statusCode).toBe(200);
@@ -204,7 +204,7 @@ describe("GET /api/contacts/reconnection-suggestions", () => {
     const sessionB = await createShareSession(b.cardId, b.editToken);
     await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": a.editToken },
       payload: { shareSessionId: sessionB, captureSource: "card_share" },
     });
@@ -217,14 +217,14 @@ describe("GET /api/contacts/reconnection-suggestions", () => {
     const sessionC = await createShareSession(c.cardId, c.editToken);
     await app.inject({
       method: "POST",
-      url: "/api/contacts",
+      url: "/api/v1/contacts",
       headers: { "x-edit-token": a.editToken },
       payload: { shareSessionId: sessionC, captureSource: "card_share" },
     });
 
     const res = await app.inject({
       method: "GET",
-      url: "/api/contacts/reconnection-suggestions",
+      url: "/api/v1/contacts/reconnection-suggestions",
       headers: { "x-edit-token": a.editToken },
     });
     expect(res.statusCode).toBe(200);

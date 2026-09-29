@@ -19,7 +19,7 @@ afterAll(async () => {
 async function createCardWithAllVisibilities() {
   const response = await app.inject({
     method: "POST",
-    url: "/api/cards",
+    url: "/api/v1/cards",
     payload: {
       displayName: "Grace Hopper",
       fields: [
@@ -39,7 +39,7 @@ describe("POST /api/cards/:cardId/share-sessions", () => {
 
     const sessionResponse = await app.inject({
       method: "POST",
-      url: `/api/cards/${card.id}/share-sessions`,
+      url: `/api/v1/cards/${card.id}/share-sessions`,
       headers: { "x-edit-token": editToken },
       payload: { channel: "link" },
     });
@@ -68,7 +68,7 @@ describe("GET /api/share-sessions/:sessionId", () => {
   it("returns 404 for an unknown session", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/api/share-sessions/00000000-0000-0000-0000-000000000000",
+      url: "/api/v1/share-sessions/00000000-0000-0000-0000-000000000000",
     });
     expect(response.statusCode).toBe(404);
   });
@@ -77,7 +77,7 @@ describe("GET /api/share-sessions/:sessionId", () => {
     const { card, editToken } = await createCardWithAllVisibilities();
     const sessionResponse = await app.inject({
       method: "POST",
-      url: `/api/cards/${card.id}/share-sessions`,
+      url: `/api/v1/cards/${card.id}/share-sessions`,
       headers: { "x-edit-token": editToken },
       payload: { channel: "link" },
     });
@@ -87,7 +87,7 @@ describe("GET /api/share-sessions/:sessionId", () => {
       sessionId,
     ]);
 
-    const response = await app.inject({ method: "GET", url: `/api/share-sessions/${sessionId}` });
+    const response = await app.inject({ method: "GET", url: `/api/v1/share-sessions/${sessionId}` });
     expect(response.statusCode).toBe(410);
   });
 
@@ -95,13 +95,13 @@ describe("GET /api/share-sessions/:sessionId", () => {
     const { card, editToken } = await createCardWithAllVisibilities();
     const sessionResponse = await app.inject({
       method: "POST",
-      url: `/api/cards/${card.id}/share-sessions`,
+      url: `/api/v1/cards/${card.id}/share-sessions`,
       headers: { "x-edit-token": editToken },
       payload: { channel: "link" },
     });
     const { sessionId } = sessionResponse.json();
 
-    const response = await app.inject({ method: "GET", url: `/api/share-sessions/${sessionId}` });
+    const response = await app.inject({ method: "GET", url: `/api/v1/share-sessions/${sessionId}` });
     expect(response.statusCode).toBe(200);
     const body = response.json();
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { flushQueue, onPendingChange, pendingCount } from "../offline-queue";
+import { b, t, tRich } from "../i18n";
 
 /**
  * The visible staleness marker rulebook §5.6 requires, plus the queue depth so a user can
@@ -32,13 +33,8 @@ export default function ConnectionBanner() {
 
   return (
     <div className={online ? "conn-banner syncing" : "conn-banner offline"} role="status">
-      {!online && <strong>Offline.</strong>}
-      {!online && " Captures and notes are saved on this device and sent when you reconnect."}
-      {pending > 0 && (
-        <span className="conn-pending">
-          {pending} waiting to sync
-        </span>
-      )}
+      {!online && tRich("connection.offline", { b })}
+      {pending > 0 && <span className="conn-pending">{t("connection.pending", { count: pending })}</span>}
     </div>
   );
 }

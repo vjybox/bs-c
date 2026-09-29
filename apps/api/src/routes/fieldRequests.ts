@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { query } from "../db.js";
+import { query, withTransaction } from "../db.js";
+import { emitEvent } from "../events.js";
 import { requireCardOwner, requireFieldRequestOwner } from "../auth.js";
 import type { CardFieldRow, FieldRequestRow, ShareSessionRow } from "../types.js";
 import {
@@ -30,7 +31,7 @@ function serializeFieldRequest(row: FieldRequestRow) {
 
 export default async function fieldRequestsRoutes(app: FastifyInstance) {
   app.post<{ Params: { sessionId: string }; Body: CreateFieldRequestBody }>(
-    "/api/share-sessions/:sessionId/field-requests",
+    "/api/v1/share-sessions/:sessionId/field-requests",
     { schema: { params: sessionIdParamsSchema, body: createFieldRequestBodySchema } },
     async (request, reply) => {
       const { sessionId } = request.params;
@@ -70,14 +71,27 @@ export default async function fieldRequestsRoutes(app: FastifyInstance) {
 
       // Two concurrent requests both pass the check above; the unique index decides, and
       // the loser returns the winner's row exactly as a later re-request would.
-      const insertResult = await query<FieldRequestRow>(
-        `insert into field_request (share_session_id, field_id)
-         values ($1, $2)
-         on conflict (share_session_id, field_id) do nothing
-         returning *`,
-        [sessionId, fieldId],
-      );
-      if (!insertResult.rows[0]) {
+      const inserted = await withTransaction(async (client) => {
+        const insertResult = await client.query<FieldRequestRow>(
+          `insert into field_request (tenant_id, share_session_id, field_id)
+           values ($1, $2, $3)
+           on conflict (share_session_id, field_id) do nothing
+           returning *`,
+          [session.tenant_id, sessionId, fieldId],
+        );
+        const row = insertResult.rows[0];
+        if (row) {
+          await emitEvent(client, {
+            tenantId: row.tenant_id,
+            type: "field_request.created",
+            aggregateType: "field_request",
+            aggregateId: row.id,
+            payload: { shareSessionId: sessionId, fieldId },
+          });
+        }
+        return row;
+      });
+      if (!inserted) {
         const winner = await query<FieldRequestRow>(
           "select * from field_request where share_session_id = $1 and field_id = $2",
           [sessionId, fieldId],
@@ -85,12 +99,12 @@ export default async function fieldRequestsRoutes(app: FastifyInstance) {
         return reply.send(serializeFieldRequest(winner.rows[0]));
       }
 
-      reply.code(201).send(serializeFieldRequest(insertResult.rows[0]));
+      reply.code(201).send(serializeFieldRequest(inserted));
     },
   );
 
   app.get<{ Params: { cardId: string } }>(
-    "/api/cards/:cardId/field-requests",
+    "/api/v1/cards/:cardId/field-requests",
     { schema: { params: cardIdParamsSchema } },
     async (request, reply) => {
       const owner = await requireCardOwner(request, reply, request.params.cardId);
@@ -117,7 +131,7 @@ export default async function fieldRequestsRoutes(app: FastifyInstance) {
   );
 
   app.post<{ Params: { id: string }; Body: RespondBody }>(
-    "/api/field-requests/:id/respond",
+    "/api/v1/field-requests/:id/respond",
     { schema: { params: fieldRequestIdParamsSchema, body: respondBodySchema } },
     async (request, reply) => {
       const owner = await requireFieldRequestOwner(request, reply, request.params.id);
@@ -130,19 +144,38 @@ export default async function fieldRequestsRoutes(app: FastifyInstance) {
       const approve = request.body?.approve === true;
       const status = approve ? "approved" : "denied";
 
-      const updatedRequestResult = await query<FieldRequestRow>(
-        `update field_request set status = $1, resolved_at = now() where id = $2 returning *`,
-        [status, owner.fieldRequest.id],
-      );
-
-      if (approve && !owner.shareSession.scoped_field_ids.includes(owner.fieldRequest.field_id)) {
-        await query(
-          `update share_session set scoped_field_ids = array_append(scoped_field_ids, $1) where id = $2`,
-          [owner.fieldRequest.field_id, owner.shareSession.id],
+      const updated = await withTransaction(async (client) => {
+        // `status = 'pending'` in the WHERE makes resolution atomic: of two concurrent
+        // responses only one updates a row, so the event and the grant happen once.
+        const result = await client.query<FieldRequestRow>(
+          `update field_request set status = $1, resolved_at = now()
+            where id = $2 and status = 'pending' returning *`,
+          [status, owner.fieldRequest.id],
         );
-      }
+        const row = result.rows[0];
+        if (!row) return null;
 
-      reply.send(serializeFieldRequest(updatedRequestResult.rows[0]));
+        if (approve) {
+          await client.query(
+            `update share_session set scoped_field_ids = array_append(scoped_field_ids, $1)
+              where id = $2 and not ($1 = any(scoped_field_ids))`,
+            [row.field_id, owner.shareSession.id],
+          );
+        }
+        await emitEvent(client, {
+          tenantId: row.tenant_id,
+          type: "field_request.resolved",
+          aggregateType: "field_request",
+          aggregateId: row.id,
+          payload: { status: row.status },
+        });
+        return row;
+      });
+
+      if (!updated) {
+        return reply.code(400).send({ error: "Field request already resolved" });
+      }
+      reply.send(serializeFieldRequest(updated));
     },
   );
 }

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { query } from "../db.js";
+import { query, withTransaction } from "../db.js";
+import { emitEvent } from "../events.js";
 import { requirePersonByToken } from "../auth.js";
 import type { CompanyProfileRow } from "../types.js";
 import {
@@ -53,7 +54,7 @@ interface TreeNode {
 
 export default async function companiesRoutes(app: FastifyInstance) {
   // Static path first, so "mine" is never captured as a :companyId.
-  app.get("/api/companies/mine", async (request, reply) => {
+  app.get("/api/v1/companies/mine", async (request, reply) => {
     const person = await requirePersonByToken(request, reply);
     if (!person) return;
 
@@ -75,7 +76,7 @@ export default async function companiesRoutes(app: FastifyInstance) {
   });
 
   app.get<{ Querystring: { q?: string } }>(
-    "/api/companies",
+    "/api/v1/companies",
     { schema: { querystring: companySearchQuerySchema } },
     async (request, reply) => {
       // Firmographic data is global and readable by any authenticated user (rulebook 8.1).
@@ -99,7 +100,7 @@ export default async function companiesRoutes(app: FastifyInstance) {
   );
 
   app.post<{ Body: CompanyBody }>(
-    "/api/companies",
+    "/api/v1/companies",
     { schema: { body: createCompanyBodySchema } },
     async (request, reply) => {
       const person = await requirePersonByToken(request, reply);
@@ -116,18 +117,29 @@ export default async function companiesRoutes(app: FastifyInstance) {
         if (existing.rows[0]) return reply.code(200).send(serializeCompany(existing.rows[0]));
       }
 
-      const result = await query<CompanyProfileRow>(
-        `INSERT INTO company_profile (name, domain, industry, size_band, enrichment_source)
-         VALUES ($1, $2, $3, $4, 'manual')
-         RETURNING *`,
-        [request.body.name, domain, request.body.industry ?? null, request.body.sizeBand ?? null],
-      );
-      return reply.code(201).send(serializeCompany(result.rows[0]));
+      const company = await withTransaction(async (client) => {
+        const result = await client.query<CompanyProfileRow>(
+          `INSERT INTO company_profile (name, domain, industry, size_band, enrichment_source)
+           VALUES ($1, $2, $3, $4, 'manual')
+           RETURNING *`,
+          [request.body.name, domain, request.body.industry ?? null, request.body.sizeBand ?? null],
+        );
+        // The company is global; the event is attributed to the tenant that caused it.
+        await emitEvent(client, {
+          tenantId: person.tenant_id,
+          type: "company.created",
+          aggregateType: "company",
+          aggregateId: result.rows[0].id,
+          payload: { enrichmentSource: "manual" },
+        });
+        return result.rows[0];
+      });
+      return reply.code(201).send(serializeCompany(company));
     },
   );
 
   app.get<{ Params: CompanyIdParams }>(
-    "/api/companies/:companyId",
+    "/api/v1/companies/:companyId",
     { schema: { params: companyIdParamsSchema } },
     async (request, reply) => {
       const person = await requirePersonByToken(request, reply);
@@ -143,7 +155,7 @@ export default async function companiesRoutes(app: FastifyInstance) {
   );
 
   app.patch<{ Params: CompanyIdParams; Body: CompanyBody }>(
-    "/api/companies/:companyId",
+    "/api/v1/companies/:companyId",
     { schema: { params: companyIdParamsSchema, body: updateCompanyBodySchema } },
     async (request, reply) => {
       const person = await requirePersonByToken(request, reply);
@@ -158,7 +170,7 @@ export default async function companiesRoutes(app: FastifyInstance) {
   );
 
   app.get<{ Params: CompanyIdParams }>(
-    "/api/companies/:companyId/tree",
+    "/api/v1/companies/:companyId/tree",
     { schema: { params: companyIdParamsSchema } },
     async (request, reply) => {
       const person = await requirePersonByToken(request, reply);

@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getContact, getStoredAuth, logInteraction } from "../api";
 import type { ContactDetail, Interaction, InteractionChannel } from "../types";
+import { getLocale, t } from "../i18n";
 
 const CHANNELS: InteractionChannel[] = ["meeting", "call", "email", "message", "note"];
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString(getLocale(), {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -70,7 +71,7 @@ export default function ContactDetailPage() {
       );
       setSummary("");
     } catch (err) {
-      setLogError(err instanceof Error ? err.message : "Failed to log interaction");
+      setLogError(err instanceof Error ? err.message : t("contact.logFailed"));
     } finally {
       setLogging(false);
     }
@@ -80,36 +81,36 @@ export default function ContactDetailPage() {
   if (error) {
     return (
       <div className="page">
-        <Link to="/contacts">← My Contacts</Link>
+        <Link to="/contacts">{t("contact.back")}</Link>
         <p className="error-text">{error}</p>
       </div>
     );
   }
-  if (!contact) return <div className="page"><p>Loading…</p></div>;
+  if (!contact) return <div className="page"><p>{t("common.loading")}</p></div>;
 
   return (
     <div className="page">
-      <Link to="/contacts">← My Contacts</Link>
-      <h1>{contact.subject?.displayName ?? "(unknown)"}</h1>
+      <Link to="/contacts">{t("contact.back")}</Link>
+      <h1>{contact.subject?.displayName ?? t("common.unknownPerson")}</h1>
       {contact.subject?.headline && <p className="contact-headline">{contact.subject.headline}</p>}
       {contact.company && (
         <p className="contact-company">
           <Link to={`/companies/${contact.company.id}`}>{contact.company.name}</Link>
           {contact.company.enrichmentSource === "derived" && (
-            <span className="inferred-badge" title="Derived from an email domain">
-              inferred
+            <span className="inferred-badge" title={t("common.inferredTitle")}>
+              {t("common.inferred")}
             </span>
           )}
         </p>
       )}
       {contact.captureContext && (
-        <p className="contact-context">Met: {contact.captureContext}</p>
+        <p className="contact-context">{t("contact.met", { context: contact.captureContext })}</p>
       )}
 
-      <h2>Log Interaction</h2>
+      <h2>{t("contact.logTitle")}</h2>
       <form onSubmit={handleLogInteraction} className="form">
         <div className="form-field">
-          <label htmlFor="channel">Channel</label>
+          <label htmlFor="channel">{t("contact.channel")}</label>
           <select
             id="channel"
             value={channel}
@@ -117,13 +118,13 @@ export default function ContactDetailPage() {
           >
             {CHANNELS.map((c) => (
               <option key={c} value={c}>
-                {c.charAt(0).toUpperCase() + c.slice(1)}
+                {t(`channel.${c}`)}
               </option>
             ))}
           </select>
         </div>
         <div className="form-field">
-          <label htmlFor="summary">Notes (optional)</label>
+          <label htmlFor="summary">{t("contact.notes")}</label>
           <textarea
             id="summary"
             value={summary}
@@ -134,19 +135,19 @@ export default function ContactDetailPage() {
         </div>
         {logError && <p className="error-text">{logError}</p>}
         <button type="submit" disabled={logging}>
-          {logging ? "Saving…" : "Log Interaction"}
+          {logging ? t("common.saving") : t("contact.logSubmit")}
         </button>
       </form>
 
-      <h2>Interaction History</h2>
+      <h2>{t("contact.history")}</h2>
       {contact.interactions.length === 0 ? (
-        <p className="muted-text">No interactions logged yet.</p>
+        <p className="muted-text">{t("contact.noHistory")}</p>
       ) : (
         <ul className="interaction-list">
           {contact.interactions.map((i) => (
             <li key={i.id} className="interaction-row">
               <span className="interaction-channel">
-                {i.channel.charAt(0).toUpperCase() + i.channel.slice(1)}
+                {t(`channel.${i.channel}`)}
               </span>
               <span className="interaction-date">{formatDate(i.occurredAt)}</span>
               {i.summary && <p className="interaction-summary">{i.summary}</p>}

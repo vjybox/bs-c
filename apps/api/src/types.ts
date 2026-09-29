@@ -5,6 +5,7 @@ export type FieldRequestStatus = "pending" | "approved" | "denied";
 
 export interface PersonRow {
   id: string;
+  tenant_id: string;
   display_name: string;
   headline: string | null;
   edit_token: string;
@@ -14,6 +15,7 @@ export interface PersonRow {
 
 export interface DigitalCardRow {
   id: string;
+  tenant_id: string;
   person_id: string;
   label: string;
   is_default: boolean;
@@ -24,6 +26,7 @@ export interface DigitalCardRow {
 
 export interface CardFieldRow {
   id: string;
+  tenant_id: string;
   card_id: string;
   field_type: FieldType;
   label: string;
@@ -34,6 +37,7 @@ export interface CardFieldRow {
 
 export interface ShareSessionRow {
   id: string;
+  tenant_id: string;
   card_id: string;
   channel: ShareChannel;
   scoped_field_ids: string[];
@@ -43,6 +47,7 @@ export interface ShareSessionRow {
 
 export interface FieldRequestRow {
   id: string;
+  tenant_id: string;
   share_session_id: string;
   field_id: string;
   status: FieldRequestStatus;
@@ -55,6 +60,7 @@ export type InteractionChannel = "meeting" | "call" | "email" | "message" | "not
 
 export interface ContactRow {
   id: string;
+  tenant_id: string;
   owner_person_id: string;
   subject_person_id: string | null;
   unmatched_profile: Record<string, unknown> | null;
@@ -97,10 +103,12 @@ export interface ConnectionRow {
 
 export interface InteractionRow {
   id: string;
+  tenant_id: string;
   contact_id: string;
   connection_id: string | null;
   logged_by_person_id: string;
   channel: InteractionChannel;
+  visibility: "private" | "organization";
   summary: string | null;
   occurred_at: string;
   created_at: string;
