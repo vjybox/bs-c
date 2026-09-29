@@ -1,3 +1,4 @@
+import { newId } from "./ids";
 import type {
   Company,
   Contact,
@@ -54,7 +55,7 @@ async function postOrQueue<T>(
   optimistic: (requestId: string) => T,
   label: string,
 ): Promise<T> {
-  const requestId = crypto.randomUUID();
+  const requestId = newId();
   const payload = JSON.stringify(body(requestId));
 
   const queueIt = async () => {

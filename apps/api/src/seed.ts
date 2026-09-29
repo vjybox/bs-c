@@ -416,6 +416,13 @@ async function seed(client: PoolClient): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  // The compose seed service always runs; this is the gate. Demo data only exists where
+  // demo sign-in is enabled, so its committed tokens are never loaded into a real deployment.
+  if (process.env.DEMO_MODE !== "true") {
+    console.log("Demo mode off (DEMO_MODE is not \"true\") — not seeding.");
+    return;
+  }
+
   // Same migrations the API runs at boot, so seeding works on an empty database too.
   await runMigrations(pool, { log: (msg) => console.log(msg) });
 

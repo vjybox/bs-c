@@ -5,6 +5,7 @@
 // database (see demo-fixtures.json), so the data shown is genuine backend output rather
 // than a re-derivation of it. Writes are simulated in memory and vanish on reload.
 import fixturesJson from "./demo-fixtures.json";
+import { newId } from "./ids";
 import type {
   Company,
   Contact,
@@ -81,7 +82,7 @@ interface Fixtures {
 const state: Fixtures = structuredClone(fixturesJson) as unknown as Fixtures;
 
 function uid(): string {
-  return crypto.randomUUID();
+  return newId();
 }
 
 /**

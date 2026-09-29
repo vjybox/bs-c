@@ -3,24 +3,23 @@
 A thin vertical slice of the Identity & Card Core module: `apps/api` (Fastify + Postgres)
 and `apps/web` (React + Vite). See `docs/` for the full product design corpus; this slice
 intentionally omits real Account/OAuth auth (ADR-0008) — `edit_token` stands in for it — and
-has never been deployed anywhere. Everything below is either run locally or build-verified
-locally; no external hosting account has been touched.
+has not been deployed to any public host. The Docker stack has been run end to end (see
+"Verified under Docker" below); no external hosting account has been touched.
 
 ## Trying it out (one command)
 
 ```
-DEMO_MODE=true docker compose --profile demo up --build
+DEMO_MODE=true docker compose up --build
 ```
 
 Then open `http://localhost:8080` and click **"Sign in as a demo persona"**. Compose brings up
-Postgres, the API applies the schema migrations, the `demo` profile seeds demo data, and nginx
-serves the built web app with `/api/*` proxied to the API. Nothing else to install.
+Postgres, the API applies the schema migrations, the seed loads demo data, and nginx serves the
+built web app with `/api/*` proxied to the API. Nothing else to install.
 
-Both parts are needed and both are off by default: `--profile demo` creates the seeded people,
-`DEMO_MODE=true` lets their committed tokens sign in. A plain `docker compose up --build` is a
-real, empty deployment — no demo personas exist and the demo tokens are refused even if a demo
-seed once ran against that database. To make demo mode stick, uncomment `COMPOSE_PROFILES=demo`
-and `DEMO_MODE=true` in `.env`.
+`DEMO_MODE` is **off by default**, and one flag controls both halves of demo mode: the seed only
+loads the sample people when it is `true`, and their committed sign-in tokens are only accepted
+when it is `true`. A plain `docker compose up --build` is a real, empty deployment. To keep demo
+mode on across restarts, put `DEMO_MODE=true` in `.env`.
 
 The seed creates seven people from the design corpus's personas. **Mara Oyelaran** has the most
 to look at: six contacts with different relationship strengths, an interaction history going
@@ -60,67 +59,157 @@ docker compose exec -T postgres pg_restore -U postgres --no-owner -d digital_ide
 docker compose start api
 ```
 
-This exact dump/restore pair was verified against a seeded database here (identical row counts
-and content, and the restored database needed no further migrations); the compose service
-wrapping it was not run, as there is no Docker daemon in this environment.
+This exact dump/restore pair was verified against a seeded database (identical row counts and
+content, and the restored database needed no further migrations), and the `backup` service was
+seen writing its dump under Docker. The first dump is taken at startup, so on a brand-new
+stack it may predate the seed; the next scheduled one includes everything.
 
-> **Not verified here.** `docker compose up` has never been executed in the environment this was
-> written in — no Docker daemon is available, and outbound access to Docker Hub is restricted.
-> The application logic behind it (seed script, demo endpoint, full browser flow) was verified
-> against a local Postgres; the image build and compose orchestration were not.
+### Verified under Docker
 
-To reseed by hand, or to seed a non-Docker database:
+On 2026-09-29 the full stack was built and run under Docker Engine 29.3 with `docker compose`,
+using the Dockerfiles and compose file exactly as committed. Two sandbox-only adjustments were
+kept out of the repo: base images were pulled from a Docker Hub mirror (the sandbox's shared IP
+was rate-limited), and the build containers were given the sandbox's TLS proxy certificate.
+Checked:
+
+- All images build (TypeScript compile, Vite bundle). The seed applies all migrations and loads
+  the seven personas; the api becomes healthy; the backup service writes a dump.
+- In a real browser through nginx on port 8080: demo sign-in, contacts, notes, and the full
+  offline sequence (service worker, offline reload, queued capture, sync on reconnect, offline
+  vCard share).
+- **Over plain HTTP from a non-localhost address** (as `http://<nas-ip>:8080` is): saving a
+  contact and logging a note work. Browsers only provide `crypto.randomUUID` on HTTPS or
+  localhost, which previously made every save fail there; `apps/web/src/ids.ts` falls back.
+- Data survives `docker compose restart` and `down` + `up`; the seed skips an existing database.
+- `DEMO_MODE=false`: demo tokens refused (403), the personas route gone (404), card creation
+  still works.
+- **nginx follows a recreated api container.** It used to resolve `api` once at startup, so
+  recreating only the api (any `.env` change or update) left every request failing with 502
+  until the web container was restarted too. `apps/web/nginx.conf` now re-resolves via
+  Docker's DNS; verified by forcing the api onto a new IP.
+
+Not checked here: Synology's own Container Manager and its Compose version, and a real phone.
+
+To reseed by hand, or to seed a non-Docker database (it refuses unless `DEMO_MODE=true`, set
+in the environment or `apps/api/.env`):
 
 ```
-npm run seed --workspace=apps/api
+DEMO_MODE=true npm run seed --workspace=apps/api
 ```
 
 It is idempotent — it exits without doing anything if the database already has people in it.
 
 ## Running it on a Synology NAS (Container Manager)
 
-> **Copy the whole project folder to the NAS — not just `docker-compose.yml`.** The api, web
-> and seed services build from source in this folder; the compose file alone cannot build them.
+Tested path: **x86_64 NAS, DSM 7.2 with Container Manager 24.x**, project downloaded as a ZIP,
+reached from phones over **HTTPS through a free Synology DDNS name**. HTTPS is not optional
+decoration: browsers disable offline mode, installing to the home screen and copy-to-clipboard
+on plain HTTP. Plain `http://<nas-ip>:8080` still works for everything else, which makes it the
+right first check.
 
-1. **Copy the project** to a shared folder, e.g. `/volume1/docker/digital-identity`. File
-   Station, `git clone` over SSH, or drag-and-drop all work.
+### 1. Put the project on the NAS
 
-2. **Create a `.env`** next to `docker-compose.yml`. Copy `.env.example` and set at minimum:
+1. On GitHub, switch to branch `claude/digital-identity-platform-design-gfrgn1` → **Code** →
+   **Download ZIP**.
+2. In **File Station**, create `/docker/digital-identity` (on `volume1`), upload the ZIP there
+   and **Extract**. The ZIP contains one folder named after the repository and branch; move its
+   *contents* up so that `docker-compose.yml` sits directly in `/docker/digital-identity`.
 
-   ```
-   WEB_BASE_URL=http://192.168.1.50:8080
-   ```
+> Copy the whole folder, not just `docker-compose.yml` — the api, web and seed images build
+> from the source in it.
 
-   Use your NAS's real LAN address (DSM → Control Panel → Network → Network Interface). This
-   one matters more than it looks: share links and QR codes are generated from it, so if it
-   still says `localhost`, every QR code you scan from a phone points the phone at itself.
+### 2. Create `.env`
 
-   If something already holds port 8080 — Web Station and a few other DSM packages do — set
-   `WEB_PORT=8788` (or anything free) and use the same port in `WEB_BASE_URL`.
+In that folder, copy `.env.example` to `.env` (File Station → Copy, then rename; or create it in
+Text Editor) and set:
 
-3. **Container Manager → Project → Create.** Set the path to the folder from step 1; it will
-   detect `docker-compose.yml`. Start it. The first build takes a while: it compiles the API
-   and bundles the web app on the NAS.
+```
+WEB_BASE_URL=https://yourname.synology.me
+WEB_PORT=8080
+POSTGRES_PASSWORD=pickLettersAndDigits42
+DEMO_MODE=true
+```
 
-   For a demo with the seeded personas, also uncomment `COMPOSE_PROFILES=demo` and
-   `DEMO_MODE=true`. Leave them commented for real use.
+- `WEB_BASE_URL` is the address phones will open: share links and QR codes are built from it.
+  Until step 5 is done you can use `http://<nas-ip>:8080` and change it later (then rebuild —
+  step 3 again — or just restart the project).
+- `POSTGRES_PASSWORD`: letters and digits only, and set it **before the first start** —
+  Postgres only reads it when its volume is created.
+- If DSM already uses port 8080 (Web Station does), set `WEB_PORT=8788` or any free port and
+  use it in the reverse proxy below.
 
-4. **Open `http://<nas-ip>:8080`.** In demo mode, click *"Sign in as a demo persona."*
+### 3. Build and start
 
-Backups go to the `backups/` folder inside the project folder — include it in Hyper Backup.
+**Container Manager → Project → Create**:
+- Project name: `digital-identity`
+- Path: `/docker/digital-identity` — it detects the existing `docker-compose.yml`; choose to use it.
+- Skip the Web Station portal option. Finish; it builds and starts.
 
-Only the web port is published. Postgres and the API are reachable only from inside the compose
-network, which is why the default database password is harmless — nothing outside the stack can
-connect to it.
+The first build takes roughly 5–15 minutes (it installs dependencies and compiles on the NAS).
+When done, under **Container** you should see `postgres`, `api`, `web` and `backup` running and
+`seed` **stopped** — the seed runs once and exits; that is correct. Its log should end with the
+list of demo personas.
 
-**Demo mode is off by default.** Turned on, `GET /api/v1/demo/personas` hands out edit tokens —
-full access to every demo identity — to anyone who can reach the app. On a home LAN, for a
-demo, that is the point. If this NAS is reachable from anywhere else, leave it off.
+### 4. Check it on the LAN
 
-Architecture is not a concern: `postgres:16-alpine`, `node:22-slim` and `nginx:1.27-alpine` are
-all multi-arch, and the dependency tree has no native compilation, so this builds on x86_64 and
-ARM64 Synology models alike. On a 2 GB model the build may be tight — it runs `npm ci` twice
-plus `tsc` and Vite — in which case build the images on a desktop and load them onto the NAS.
+Open `http://<nas-ip>:8080` (DSM → Control Panel → Network → Network Interface shows the IP),
+click **Sign in as a demo persona**, pick Mara, open a contact and log a note.
+
+### 5. HTTPS with a Synology DDNS name
+
+1. **DDNS** — Control Panel → External Access → DDNS → **Add**: service provider *Synology*,
+   choose a hostname (`yourname.synology.me`), external address *Auto*. Tick *Get a certificate
+   from Let's Encrypt* if offered.
+2. **Router** — forward TCP **443** and **80** to the NAS's LAN IP. Port 80 is needed for
+   Let's Encrypt to issue and renew the certificate.
+3. **Certificate** (if not created in 1) — Control Panel → Security → Certificate → **Add** →
+   *Add a new certificate* → *Get a certificate from Let's Encrypt* → domain
+   `yourname.synology.me`.
+4. **Reverse proxy** — Control Panel → Login Portal → Advanced → **Reverse Proxy** → Create:
+   - Source: protocol **HTTPS**, hostname `yourname.synology.me`, port **443**
+   - Destination: protocol **HTTP**, hostname `localhost`, port **8080** (or your `WEB_PORT`)
+5. **Assign the certificate** — Control Panel → Security → Certificate → **Settings**: set the
+   `yourname.synology.me` reverse-proxy entry to use the Let's Encrypt certificate.
+6. Make sure `.env` has `WEB_BASE_URL=https://yourname.synology.me`, then in Container Manager
+   → Project → `digital-identity` → **Action → Restart**.
+
+### 6. Test from a phone
+
+Turn Wi-Fi **off** (use mobile data, so you are really coming in from outside), then:
+
+1. Open `https://yourname.synology.me` → Sign in as a demo persona → Mara.
+2. **Add to Home Screen** (Safari: Share → Add to Home Screen; Chrome: ⋮ → Install app), and
+   open it from the icon.
+3. **Share** → a QR code appears; scan it with a second phone → the card opens.
+4. Turn on **airplane mode** → the app shows *Offline*; open a contact and log a note → it
+   shows *1 waiting to sync*. Turn airplane mode off → the banner clears; reload → the note is
+   there.
+5. In airplane mode, **Share** again → the QR carries a vCard with public details only.
+
+### Security while testing
+
+With ports 443/80 open and `DEMO_MODE=true`, **anyone who finds the address can sign in as the
+demo personas and create cards**. That is acceptable for fake demo data during a test window,
+not for real people:
+
+- Close the router forwards when you are not testing.
+- Real sign-in (ADR-0017) and rate limiting are not built yet (tech-debt TD-03, TD-06). Set
+  `DEMO_MODE=false` and wait for them before anyone enters real details.
+- Add the project's `backups/` folder to **Hyper Backup** so dumps leave the NAS (TD-13).
+- Postgres and the API are never published; only nginx (`WEB_PORT`) is.
+
+### Updating to a newer version
+
+Download the new ZIP and replace the project files, **keeping `.env` and `backups/`**. Then
+Container Manager → Project → `digital-identity` → **Action → Build** (it rebuilds and restarts).
+Schema changes apply themselves on start. **Never delete the project's volume** — that is the
+database.
+
+### Architecture notes
+
+`postgres:16-alpine`, `node:22-slim` and `nginx:1.27-alpine` are multi-arch and nothing compiles
+native code, so ARM64 models work too. On a 2 GB model the build may be tight (it runs `npm ci`
+twice plus `tsc` and Vite); if it fails for memory, build on a desktop and load the images.
 
 ## Local development
 
@@ -234,12 +323,10 @@ failed", details: [...] }`; any other unhandled error is logged server-side and 
 generic `500 { error: "Internal server error" }` (see the `setErrorHandler` in
 `apps/api/src/app.ts`). `GET /healthz` returns a plain `200` and backs the Docker healthcheck.
 
-## Deploying (not done — these commands are unexecuted)
+## Deploying
 
-Nothing described here has been run against any external host. Outbound access to Docker Hub
-is blocked by this session's network policy, so `docker compose build` has **not** been
-verified in this environment; the Dockerfiles were checked by building the underlying `tsc`/
-`vite` outputs directly. Verify the build yourself before trusting it in CI/production:
+Nothing described here has been run against any external host. The images and compose stack
+were built and run locally under Docker (see "Verified under Docker"). To build:
 
 ```
 docker compose build
