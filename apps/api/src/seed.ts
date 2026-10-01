@@ -4,6 +4,7 @@
 import type { PoolClient } from "pg";
 import { pool, recomputeContactStrength } from "./db.js";
 import { runMigrations } from "./migrate.js";
+import { pathToFileURL } from "node:url";
 import { deriveCompanyForPerson } from "./company-derivation.js";
 import type { FieldType, FieldVisibility, InteractionChannel } from "./types.js";
 
@@ -415,26 +416,28 @@ async function seed(client: PoolClient): Promise<void> {
   }
 }
 
-async function main(): Promise<void> {
-  // The compose seed service always runs; this is the gate. Demo data only exists where
-  // demo sign-in is enabled, so its committed tokens are never loaded into a real deployment.
-  if (process.env.DEMO_MODE !== "true") {
-    console.log("Demo mode off (DEMO_MODE is not \"true\") — not seeding.");
-    return;
-  }
-
-  // Same migrations the API runs at boot, so seeding works on an empty database too.
-  await runMigrations(pool, { log: (msg) => console.log(msg) });
-
-  const existing = await pool.query("SELECT 1 FROM person LIMIT 1");
-  if (existing.rowCount && existing.rowCount > 0) {
-    console.log("Database already has people in it — skipping seed.");
-    return;
-  }
+/**
+ * Loads the demo personas when DEMO_MODE=true and the database has no people yet. The api
+ * calls this at boot, so there is no separate one-shot container: Synology Container
+ * Manager reports any container that exits on its own as "stopped unexpectedly", even a
+ * successful one. Expects migrations to have run already.
+ */
+export async function seedDemoData(log: (msg: string) => void = console.log): Promise<void> {
+  // The gate. Demo data only exists where demo sign-in is enabled, so its committed tokens
+  // are never loaded into a real deployment.
+  if (process.env.DEMO_MODE !== "true") return;
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    // Serialises concurrent boots (two api replicas); the loser then sees people and skips.
+    await client.query("SELECT pg_advisory_xact_lock(7311205)");
+    const existing = await client.query("SELECT 1 FROM person LIMIT 1");
+    if (existing.rowCount) {
+      await client.query("COMMIT");
+      log("demo: database already has people in it, not seeding");
+      return;
+    }
     await seed(client);
     await client.query("COMMIT");
   } catch (err) {
@@ -444,19 +447,28 @@ async function main(): Promise<void> {
     client.release();
   }
 
-  console.log("Seeded demo data. Sign in as any of these at /demo:");
-  for (const p of PEOPLE) {
-    console.log(`  ${p.displayName.padEnd(16)} ${p.editToken}`);
-  }
+  log("demo: seeded demo data. Sign in as any of these at /demo:");
+  for (const p of PEOPLE) log(`  ${p.displayName.padEnd(16)} ${p.editToken}`);
 }
 
-try {
-  await main();
-} catch (err) {
-  console.error("Seed failed:", err);
-  process.exitCode = 1;
-} finally {
-  // The pool is created at module import; without this the process never exits, which
-  // deadlocks the compose `service_completed_successfully` dependency.
-  await pool.end();
+async function main(): Promise<void> {
+  if (process.env.DEMO_MODE !== "true") {
+    console.log('Demo mode off (DEMO_MODE is not "true") — not seeding.');
+    return;
+  }
+  await runMigrations(pool, { log: (msg) => console.log(msg) });
+  await seedDemoData();
+}
+
+// Only when run directly (`npm run seed`), not when the api imports seedDemoData.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    await main();
+  } catch (err) {
+    console.error("Seed failed:", err);
+    process.exitCode = 1;
+  } finally {
+    // The pool is created at module import; without this the process never exits.
+    await pool.end();
+  }
 }

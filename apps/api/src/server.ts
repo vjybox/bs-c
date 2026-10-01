@@ -1,8 +1,11 @@
 import { buildApp } from "./app.js";
 import { pool } from "./db.js";
 import { runMigrations } from "./migrate.js";
+import { seedDemoData } from "./seed.js";
 
 await runMigrations(pool, { log: (msg) => console.log(msg) });
+// No-op unless DEMO_MODE=true and the database is empty.
+await seedDemoData();
 
 const app = await buildApp();
 

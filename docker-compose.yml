@@ -15,30 +15,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    # Deliberately not published. Only api/seed/backup reach it, over the compose network.
+    # Deliberately not published. Only api and backup reach it, over the compose network.
     # Publishing it would put these credentials on your LAN.
-
-  # Demo data, gated on DEMO_MODE (the same flag that enables demo sign-in). With the flag
-  # off it logs "not seeding" and exits, so a real deployment never gets the seeded
-  # personas, whose tokens are committed to git. One-shot and idempotent. A plain env
-  # flag rather than a compose profile, so it works from Synology Container Manager's
-  # Project UI and older Compose versions alike.
-  seed:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    command: ["node", "dist/seed.js"]
-    environment:
-      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/digital_identity
-      DEMO_MODE: ${DEMO_MODE:-false}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: "no"
-    # The api image's inherited HEALTHCHECK curls /healthz; a seed container serves nothing
-    # and would be marked unhealthy forever.
-    healthcheck:
-      disable: true
 
   api:
     build:
@@ -51,12 +29,11 @@ services:
       # MUST match the address you actually open in a browser. Share links and QR codes are
       # built from this, so leaving it as localhost on a NAS produces unscannable codes.
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:8080}
-      # Off by default. When true, the seed service loads demo personas, GET
+      # Off by default. When true, the api loads the demo personas on first boot, GET
       # /api/v1/demo/personas hands out their edit tokens, and those tokens are accepted.
       # Never set it where real people's data lives.
       DEMO_MODE: ${DEMO_MODE:-false}
-    # No dependency on the seed: the api applies migrations itself at boot, and the seed
-    # runs the same migrations under the same advisory lock, so their order does not matter.
+    # Applies migrations, then (DEMO_MODE=true only) loads demo data, then listens.
     depends_on:
       postgres:
         condition: service_healthy

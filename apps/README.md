@@ -13,11 +13,11 @@ DEMO_MODE=true docker compose up --build
 ```
 
 Then open `http://localhost:8080` and click **"Sign in as a demo persona"**. Compose brings up
-Postgres, the API applies the schema migrations, the seed loads demo data, and nginx serves the
+Postgres, the API applies the schema migrations and loads demo data, and nginx serves the
 built web app with `/api/*` proxied to the API. Nothing else to install.
 
-`DEMO_MODE` is **off by default**, and one flag controls both halves of demo mode: the seed only
-loads the sample people when it is `true`, and their committed sign-in tokens are only accepted
+`DEMO_MODE` is **off by default**, and one flag controls both halves of demo mode: the API only
+loads the sample people (on first boot, into an empty database) when it is `true`, and their committed sign-in tokens are only accepted
 when it is `true`. A plain `docker compose up --build` is a real, empty deployment. To keep demo
 mode on across restarts, put `DEMO_MODE=true` in `.env`.
 
@@ -32,7 +32,7 @@ when `DEMO_MODE=true`. With the flag off the route does not exist and returns 40
 ### Schema changes
 
 The schema lives in numbered SQL files in `apps/api/migrations/`, applied by
-`apps/api/src/migrate.ts` every time the API starts (and by the seed and the test runner). Each
+`apps/api/src/migrate.ts` every time the API starts (and by `npm run seed` and the test runner). Each
 runs once, in its own transaction, recorded in `schema_migrations` with a checksum; an applied
 file that is later edited stops the API with an error, so history is changed by adding a
 migration, never by rewriting one. Upgrading is just `docker compose up --build` —
@@ -62,7 +62,7 @@ docker compose start api
 This exact dump/restore pair was verified against a seeded database (identical row counts and
 content, and the restored database needed no further migrations), and the `backup` service was
 seen writing its dump under Docker. The first dump is taken at startup, so on a brand-new
-stack it may predate the seed; the next scheduled one includes everything.
+stack it may predate the demo data; the next scheduled one includes everything.
 
 ### Verified under Docker
 
@@ -115,7 +115,7 @@ right first check.
    and **Extract**. The ZIP contains one folder named after the repository and branch; move its
    *contents* up so that `docker-compose.yml` sits directly in `/docker/digital-identity`.
 
-> Copy the whole folder, not just `docker-compose.yml` — the api, web and seed images build
+> Copy the whole folder, not just `docker-compose.yml` — the api and web images build
 > from the source in it.
 >
 > If the project fails with **"bind mount failed … backups does not exist"**, your copy predates
@@ -150,9 +150,12 @@ DEMO_MODE=true
 - Skip the Web Station portal option. Finish; it builds and starts.
 
 The first build takes roughly 5–15 minutes (it installs dependencies and compiles on the NAS).
-When done, under **Container** you should see `postgres`, `api`, `web` and `backup` running and
-`seed` **stopped** — the seed runs once and exits; that is correct. Its log should end with the
-list of demo personas.
+When done, under **Container** you should see four containers running: `postgres`, `api`, `web`
+and `backup`. The `api` log lists the seven demo personas on its first start.
+
+> Copies from before 1 October 2026 had a fifth, `seed`, which loaded the demo data and then
+> exited. Container Manager reports that as "stopped unexpectedly"; it was harmless. Newer
+> copies load demo data inside the api instead.
 
 ### 4. Check it on the LAN
 
@@ -222,8 +225,8 @@ twice plus `tsc` and Vite); if it fails for memory, build on a desktop and load 
    sudo pg_ctlcluster 16 main start   # or: brew services start postgresql@16
    createdb digital_identity
    ```
-   No schema step: the API applies `apps/api/migrations/` when it starts. For demo data, run
-   `npm run seed --workspace=apps/api` and set `DEMO_MODE=true` in `apps/api/.env`.
+   No schema step: the API applies `apps/api/migrations/` when it starts. For demo data:
+   with `DEMO_MODE=true` in `apps/api/.env`, the API loads demo data into an empty database at start.
 2. Configure env vars (optional — the code defaults to the same values, and the dev script
    uses `--env-file-if-exists`, so a missing `.env` is not fatal):
    ```
