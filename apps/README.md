@@ -117,6 +117,10 @@ right first check.
 
 > Copy the whole folder, not just `docker-compose.yml` — the api, web and seed images build
 > from the source in it.
+>
+> If the project fails with **"bind mount failed … backups does not exist"**, your copy predates
+> the committed `backups/` folder: create a folder named `backups` next to `docker-compose.yml`
+> in File Station, then build again. Container Manager does not create missing mount folders.
 
 ### 2. Create `.env`
 
