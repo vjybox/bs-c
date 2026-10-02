@@ -193,6 +193,16 @@ Turn Wi-Fi **off** (use mobile data, so you are really coming in from outside), 
    there.
 5. In airplane mode, **Share** again → the QR carries a vCard with public details only.
 
+### Troubleshooting
+
+| What you see | Cause | Fix |
+|---|---|---|
+| `bind mount failed … backups does not exist` | Copy predates the committed `backups/` folder; Container Manager does not create mount folders | Create a `backups` folder next to `docker-compose.yml`, then build again |
+| `driver failed programming external connectivity … web-1` | `WEB_PORT` (default 8080) is already used on the NAS | Set `WEB_PORT=8788` (or any free port) in `.env`; use that port in the reverse proxy |
+| Browser: `SSL received a record that exceeded the maximum permissible length` | The browser forced `https://` onto the plain-HTTP LAN port | Type `http://<nas-ip>:<port>` in full; in Firefox, turn HTTPS-Only Mode off for that site |
+| App page says **Bad Gateway**; `api` container keeps restarting; its log says `password authentication failed for user "postgres"` (or "Database refused the password") | Postgres was first created with a different `POSTGRES_PASSWORD` and ignores later changes | If it holds only demo data: Project → **Stop**; Volume → delete only the `digital-identity…postgres-data` volume; Project → **Start**. Otherwise restore the original password in `.env` |
+| "Container … stopped unexpectedly" for `seed` | Older copies ran a one-shot seed container that exits when done | Harmless; newer copies have no seed container |
+
 ### Security while testing
 
 With ports 443/80 open and `DEMO_MODE=true`, **anyone who finds the address can sign in as the
